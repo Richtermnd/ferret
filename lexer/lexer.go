@@ -46,14 +46,15 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.NoLiteralToken(token.LPAREN)
 	case ')':
 		tok = token.NoLiteralToken(token.RPAREN)
+	case '\n':
+		tok = token.NoLiteralToken(token.LF)
 	default:
 		if isDigit(l.ch) {
-			// TODO: for now it will recognize everything as float, add integer support
-			literal := l.readNumber()
+			literal, t := l.readNumber()
 			if literal == "" {
 				tok = token.NoLiteralToken(token.ILLEGAL)
 			} else {
-				tok.Type = token.FLOAT
+				tok.Type = t
 				tok.Literal = literal
 			}
 		} else {
@@ -102,16 +103,20 @@ func (l *Lexer) skipWhitespaces() {
 
 // readNumber read number, ignore '_' (python like syntax)
 // TODO: check for invalid number
-func (l *Lexer) readNumber() string {
+func (l *Lexer) readNumber() (string, token.TokenType) {
 	sb := strings.Builder{}
+	t := token.INT
 	for isDigit(l.ch) || l.ch == '_' || l.ch == '.' {
 		if isDigit(l.ch) || l.ch == '.' {
 			sb.WriteByte(l.ch)
 		}
+		if l.ch == '.' {
+			t = token.FLOAT
+		}
 		l.readChar()
 	}
 	l.unreadChar()
-	return sb.String()
+	return sb.String(), t
 }
 
 func isDigit(ch byte) bool {

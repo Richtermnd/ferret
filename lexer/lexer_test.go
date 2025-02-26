@@ -36,7 +36,7 @@ func TestNumbersRecognizing(t *testing.T) {
 			desc:   "integer",
 			source: "123",
 			expected: token.Token{
-				Type:    token.FLOAT,
+				Type:    token.INT,
 				Literal: "123",
 			},
 		},
@@ -52,7 +52,7 @@ func TestNumbersRecognizing(t *testing.T) {
 			desc:   "delimeted integer",
 			source: "123_456",
 			expected: token.Token{
-				Type:    token.FLOAT,
+				Type:    token.INT,
 				Literal: "123456",
 			},
 		},
@@ -72,18 +72,18 @@ func TestExpression(t *testing.T) {
 	source := "1 + (10 - 2) * 3.5 / 4"
 	expected := []token.Token{
 		{
-			Type:    token.FLOAT,
+			Type:    token.INT,
 			Literal: "1",
 		},
 		token.NoLiteralToken(token.ADD),
 		token.NoLiteralToken(token.LPAREN),
 		{
-			Type:    token.FLOAT,
+			Type:    token.INT,
 			Literal: "10",
 		},
 		token.NoLiteralToken(token.SUB),
 		{
-			Type:    token.FLOAT,
+			Type:    token.INT,
 			Literal: "2",
 		},
 		token.NoLiteralToken(token.RPAREN),
@@ -94,7 +94,7 @@ func TestExpression(t *testing.T) {
 		},
 		token.NoLiteralToken(token.DIV),
 		{
-			Type:    token.FLOAT,
+			Type:    token.INT,
 			Literal: "4",
 		},
 	}
