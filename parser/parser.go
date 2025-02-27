@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"strconv"
 
 	"github.com/Richtermnd/ferret/ast"
@@ -31,16 +32,16 @@ func New(l *lexer.Lexer) *Parser {
 		prefixParseFns: make(map[token.TokenType]prefixParseFn),
 		infixParseFns:  make(map[token.TokenType]infixParseFn),
 	}
-	p.registerPrefix(token.INT, p.parseIntegerLiteral)
-	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
-	p.registerPrefix(token.SUB, p.parsePrefixExpression)
-	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.prefixParseFns[token.INT] = p.parseIntegerLiteral
+	p.prefixParseFns[token.FLOAT] = p.parseFloatLiteral
+	p.prefixParseFns[token.SUB] = p.parsePrefixExpression
+	p.prefixParseFns[token.LPAREN] = p.parseGroupedExpression
 
-	p.registerInfix(token.ADD, p.parseInfixExpression)
-	p.registerInfix(token.SUB, p.parseInfixExpression)
-	p.registerInfix(token.MUL, p.parseInfixExpression)
-	p.registerInfix(token.DIV, p.parseInfixExpression)
-	p.registerInfix(token.REM, p.parseInfixExpression)
+	p.infixParseFns[token.ADD] = p.parseInfixExpression
+	p.infixParseFns[token.SUB] = p.parseInfixExpression
+	p.infixParseFns[token.MUL] = p.parseInfixExpression
+	p.infixParseFns[token.DIV] = p.parseInfixExpression
+	p.infixParseFns[token.REM] = p.parseInfixExpression
 	p.nextToken()
 	p.nextToken()
 	return p
@@ -167,12 +168,14 @@ func (p *Parser) peekPrecedence() int {
 	return p.peekToken.Precedence()
 }
 
-func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
-	p.prefixParseFns[tokenType] = fn
+func (p *Parser) HasErrors() bool {
+	return len(p.errors) != 0
 }
 
-func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
-	p.infixParseFns[tokenType] = fn
+func (p *Parser) PrintErrors(out io.Writer) {
+	for _, err := range p.Errors() {
+		fmt.Fprintln(out, err)
+	}
 }
 
 func (p *Parser) Errors() []error {

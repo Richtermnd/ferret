@@ -30,35 +30,35 @@ func (l *Lexer) NextToken() token.Token {
 	l.readChar()
 	l.skipWhitespaces()
 	switch l.ch {
-	case 0:
-		tok = token.NoLiteralToken(token.EOF)
+	case '\000':
+		tok = newToken(token.EOF, string(l.ch))
 	case '+':
-		tok = token.NoLiteralToken(token.ADD)
+		tok = newToken(token.ADD, "+")
 	case '-':
-		tok = token.NoLiteralToken(token.SUB)
+		tok = newToken(token.SUB, "-")
 	case '*':
-		tok = token.NoLiteralToken(token.MUL)
+		tok = newToken(token.MUL, "*")
 	case '/':
-		tok = token.NoLiteralToken(token.DIV)
+		tok = newToken(token.DIV, "/")
 	case '%':
-		tok = token.NoLiteralToken(token.REM)
+		tok = newToken(token.REM, "%")
 	case '(':
-		tok = token.NoLiteralToken(token.LPAREN)
+		tok = newToken(token.LPAREN, "(")
 	case ')':
-		tok = token.NoLiteralToken(token.RPAREN)
+		tok = newToken(token.RPAREN, ")")
 	case '\n':
-		tok = token.NoLiteralToken(token.LF)
+		tok = newToken(token.LF, "\\n")
 	default:
 		if isDigit(l.ch) {
 			literal, t := l.readNumber()
 			if literal == "" {
-				tok = token.NoLiteralToken(token.ILLEGAL)
+				tok = newToken(token.ILLEGAL, "ILLEGAL")
 			} else {
 				tok.Type = t
 				tok.Literal = literal
 			}
 		} else {
-			tok = token.NoLiteralToken(token.ILLEGAL)
+			tok = newToken(token.ILLEGAL, "ILLEGAL")
 		}
 	}
 
@@ -67,16 +67,18 @@ func (l *Lexer) NextToken() token.Token {
 
 func (l *Lexer) readChar() {
 	if l.readpos >= len(l.source) {
-		l.ch = 0
+		l.ch = '\000'
 	} else {
 		l.ch = l.source[l.readpos]
 	}
+
 	if l.ch == '\n' {
 		l.line++
 		l.col = 0
 	} else {
 		l.col++
 	}
+
 	l.pos = l.readpos
 	l.readpos++
 }
@@ -110,6 +112,7 @@ func (l *Lexer) readNumber() (string, token.TokenType) {
 		if isDigit(l.ch) || l.ch == '.' {
 			sb.WriteByte(l.ch)
 		}
+		// ugly, but okay
 		if l.ch == '.' {
 			t = token.FLOAT
 		}
@@ -121,4 +124,11 @@ func (l *Lexer) readNumber() (string, token.TokenType) {
 
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
+}
+
+func newToken(t token.TokenType, lit string) token.Token {
+	return token.Token{
+		Type:    t,
+		Literal: lit,
+	}
 }
