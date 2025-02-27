@@ -3,17 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 
+	"github.com/Richtermnd/ferret/evaluator"
 	"github.com/Richtermnd/ferret/lexer"
 	"github.com/Richtermnd/ferret/parser"
-	"github.com/Richtermnd/ferret/token"
 )
 
 const prompt = ">> "
 
-func interactive() {
-	s := bufio.NewScanner(os.Stdin)
+func interactive(in io.Reader, out io.Writer) {
+	s := bufio.NewScanner(in)
 	fmt.Print(prompt)
 	for s.Scan() {
 		l := lexer.New(s.Text())
@@ -21,26 +22,23 @@ func interactive() {
 		program := p.Parse()
 		if len(p.Errors()) != 0 {
 			for _, err := range p.Errors() {
-				fmt.Println(err)
+				fmt.Fprintln(out, err)
 			}
+			fmt.Fprint(out, prompt)
+			continue
+		}
+		evaluated := evaluator.Eval(program)
+		if evaluated != nil {
+			fmt.Fprintln(out, evaluated.Inspect())
 		} else {
-			for _, stmt := range program.Statements {
-				fmt.Println(stmt)
-			}
+			fmt.Fprintln(out, "failed to avaluate")
 		}
-		for {
-			tok := l.NextToken()
-			if tok.Type == token.EOF {
-				break
-			}
-			fmt.Println(tok)
-		}
-		fmt.Print(prompt)
+		fmt.Fprint(out, prompt)
 	}
 }
 
 func main() {
 	if len(os.Args) >= 2 && os.Args[1] == "i" {
-		interactive()
+		interactive(os.Stdin, os.Stdout)
 	}
 }

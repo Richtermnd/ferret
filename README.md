@@ -18,3 +18,11 @@ Main idea - create a easy language for doing math, with scalars/vectors/matrix s
  - [ ] Scientific notation and different bases for numbers
  - [ ] Check invalid numbers (like 12a3)
  - [ ] Program that goes through all the files and save all todo comments in TODO.md
+ - [ ] Compile it in wasm to create interactive web version
+
+
+
+### Implementation Q&A
+- "Why python like Add/Radd methods for objects?"
+- Operators overloading is obviously bad, but not for math.
+
