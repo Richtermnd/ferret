@@ -1,7 +1,6 @@
 package parser_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/Richtermnd/ferret/ast"
@@ -21,104 +20,58 @@ func checkParserErrors(t *testing.T, p *parser.Parser) {
 	t.FailNow()
 }
 
-func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
-	integ, ok := il.(*ast.IntegerLiteral)
-	if !ok {
-		t.Errorf("il not *ast.IntegerLiteral. got=%T", il)
-		return false
-	}
-	if integ.Value != value {
-		t.Errorf("integ.Value not %d. got=%d", value, integ.Value)
-		return false
-	}
-	if integ.Literal() != fmt.Sprintf("%d", value) {
-		t.Errorf("integ.TokenLiteral not %d. got=%s", value, integ.Literal())
-		return false
-	}
-	return true
-}
-
-func TestIntegerLiteralExpression(t *testing.T) {
-	source := "1 23 4_5_6"
-	expected := []ast.IntegerLiteral{
+func TestIdentifier(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		source string
+		token  token.Token
+		value  string
+	}{
 		{
-			Token: token.Token{Type: token.INT, Literal: "1"},
-			Value: 1,
+			desc:   "one char identifier",
+			source: "a",
+			token:  token.Token{Type: token.IDENT, Literal: "a"},
+			value:  "a",
 		},
 		{
-			Token: token.Token{Type: token.INT, Literal: "23"},
-			Value: 23,
+			desc:   "few chars identifier",
+			source: "abc",
+			token:  token.Token{Type: token.IDENT, Literal: "abc"},
+			value:  "abc",
 		},
 		{
-			Token: token.Token{Type: token.INT, Literal: "456"},
-			Value: 456,
+			desc:   "all valid chars identifier",
+			source: "a1_b",
+			token:  token.Token{Type: token.IDENT, Literal: "a1_b"},
+			value:  "a1_b",
 		},
 	}
+	for _, tt := range testCases {
+		t.Run(tt.desc, func(t *testing.T) {
+			l := lexer.New(tt.source)
+			p := parser.New(l)
+			program := p.Parse()
+			checkParserErrors(t, p)
+			t.Log(program.Statements)
+			if len(program.Statements) != 1 {
+				t.Fatalf("wrong number of statements, expected: 1 got: %d\n", len(program.Statements))
+			}
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf("stmt not a ast.ExpressionStatement: %T\n", stmt)
+			}
 
-	l := lexer.New(source)
-	p := parser.New(l)
-	program := p.Parse()
-	checkParserErrors(t, p)
-	if len(program.Statements) != len(expected) {
-		t.Log(program.Statements)
-		t.Fatalf("Expected num of expressions %d got %d\n", len(expected), len(program.Statements))
-	}
-
-	for i, stmt := range program.Statements {
-		stmt, ok := stmt.(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt not a ast.ExpressionStatement: %s", stmt.String())
-		}
-		literal, ok := stmt.Expr.(*ast.IntegerLiteral)
-		if !ok {
-			t.Fatalf("stmt exp not a ast.IntegerLiteral")
-		}
-		if literal.Token != expected[i].Token {
-			t.Errorf("mismatch tokens, expected: %+v got: %+v\n", expected[i].Token, literal.Token)
-		}
-		if literal.Value != expected[i].Value {
-			t.Errorf("mismatch tokens, expected: %+v got: %+v\n", expected[i].Token, literal.Token)
-		}
-	}
-}
-
-func TestFloatLiteralExpression(t *testing.T) {
-	source := "1.0 2.3"
-	expected := []ast.FloatLiteral{
-		{
-			Token: token.Token{Type: token.FLOAT, Literal: "1.0"},
-			Value: 1.0,
-		},
-		{
-			Token: token.Token{Type: token.FLOAT, Literal: "2.3"},
-			Value: 2.3,
-		},
-	}
-
-	l := lexer.New(source)
-	p := parser.New(l)
-	program := p.Parse()
-	checkParserErrors(t, p)
-	if len(program.Statements) != len(expected) {
-		t.Log(program.Statements)
-		t.Fatalf("Expected num of expressions %d got %d\n", len(expected), len(program.Statements))
-	}
-
-	for i, stmt := range program.Statements {
-		stmt, ok := stmt.(*ast.ExpressionStatement)
-		if !ok {
-			t.Fatalf("stmt not a ast.ExpressionStatement: %s", stmt.String())
-		}
-		literal, ok := stmt.Expr.(*ast.FloatLiteral)
-		if !ok {
-			t.Fatalf("stmt exp not a ast.FloatLiteral")
-		}
-		if literal.Token != expected[i].Token {
-			t.Errorf("mismatch tokens, expected: %+v got: %+v\n", expected[i].Token, literal.Token)
-		}
-		if literal.Value != expected[i].Value {
-			t.Errorf("mismatch tokens, expected: %+v got: %+v\n", expected[i].Token, literal.Token)
-		}
+			ident, ok := stmt.Expr.(*ast.Identifier)
+			if !ok {
+				t.Fatalf("stmt exp not a *ast.Identifier: %T\n", stmt.Expr)
+			}
+			if ident.Token != tt.token {
+				t.Errorf("mismatch tokens expected: %s got: %s\n", tt.token, ident.Token)
+			}
+			if ident.Value != tt.value {
+				t.Errorf("mismatch values expected: %s got: %s\n", tt.value, ident.Value)
+			}
+		})
 	}
 }
 
@@ -244,9 +197,10 @@ func TestInfixExpressions(t *testing.T) {
 
 func TestParenthesisExpressions(t *testing.T) {
 	testCases := []struct {
-		desc   string
-		input  string
-		output string
+		desc    string
+		input   string
+		output  string
+		wantErr bool
 	}{
 		{
 			desc:   "no parenthesis",
@@ -273,12 +227,20 @@ func TestParenthesisExpressions(t *testing.T) {
 			input:  "(1 - (2 + 3)) * 4",
 			output: "((1-(2+3))*4)",
 		},
+		{
+			desc:    "unclosed parenthesis",
+			input:   "1 - (2 + 3",
+			wantErr: true,
+		},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
 			l := lexer.New(tt.input)
 			p := parser.New(l)
 			program := p.Parse()
+			if tt.wantErr && p.HasErrors() {
+				t.SkipNow()
+			}
 			checkParserErrors(t, p)
 			s := program.String()
 			if tt.output != s {
@@ -294,6 +256,7 @@ func TestLetStatements(t *testing.T) {
 		input      string
 		identifier string
 		value      string
+		wantErr    bool
 	}{
 		{
 			desc:       "simple assignment",
@@ -307,12 +270,35 @@ func TestLetStatements(t *testing.T) {
 			identifier: "a",
 			value:      "((-5)*(1+2))",
 		},
+		{
+			desc:    "missed let",
+			input:   "a = 5",
+			wantErr: true,
+		},
+		{
+			desc:    "missed identifier",
+			input:   "let = 5",
+			wantErr: true,
+		},
+		{
+			desc:    "missed =",
+			input:   "let a 5",
+			wantErr: true,
+		},
+		{
+			desc:    "missed expr",
+			input:   "let a =",
+			wantErr: true,
+		},
 	}
 	for _, tt := range testCases {
 		t.Run(tt.desc, func(t *testing.T) {
 			l := lexer.New(tt.input)
 			p := parser.New(l)
 			program := p.Parse()
+			if tt.wantErr && p.HasErrors() {
+				t.SkipNow()
+			}
 			checkParserErrors(t, p)
 			if len(program.Statements) != 1 {
 				t.Log(program.Statements)

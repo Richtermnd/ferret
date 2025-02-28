@@ -114,7 +114,7 @@ func (l *Lexer) skipWhitespaces() {
 
 func (l *Lexer) readIdentifier() string {
 	startPos := l.pos
-	for isLetter(l.ch) || l.ch == '_' {
+	for isLetter(l.ch) || isDigit(l.ch) || l.ch == '_' {
 		l.readChar()
 	}
 	l.unreadChar()
@@ -136,6 +136,18 @@ func (l *Lexer) readNumber() (string, token.TokenType) {
 		}
 		l.readChar()
 	}
+
+	if isLetter(l.ch) {
+		sb.WriteByte(l.ch)
+		if l.ch == 'e' {
+			l.readChar()
+			exp, _ := l.readNumber()
+			return sb.String() + exp, token.FLOAT
+		} else {
+			return sb.String(), token.ILLEGAL
+		}
+	}
+
 	l.unreadChar()
 	return sb.String(), t
 }

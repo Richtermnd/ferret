@@ -8,7 +8,7 @@ type FloatLiteral struct {
 }
 
 func (s *FloatLiteral) Literal() string { return s.Token.Literal }
-func (s *FloatLiteral) String() string  { return s.Token.String() }
+func (s *FloatLiteral) String() string  { return s.Token.Literal }
 func (s *FloatLiteral) exprNode()       {}
 
 type IntegerLiteral struct {
@@ -17,7 +17,7 @@ type IntegerLiteral struct {
 }
 
 func (s *IntegerLiteral) Literal() string { return s.Token.Literal }
-func (s *IntegerLiteral) String() string  { return s.Token.String() }
+func (s *IntegerLiteral) String() string  { return s.Token.Literal }
 func (s *IntegerLiteral) exprNode()       {}
 
 // TODO: string literal

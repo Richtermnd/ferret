@@ -8,7 +8,7 @@ import (
 )
 
 func TestOperandsRecognizing(t *testing.T) {
-	source := "+ - * / ( ) ; ="
+	source := "+ - * / ( ) ; = $"
 	expected := []token.Token{
 		{Type: token.ADD, Literal: "+"},
 		{Type: token.SUB, Literal: "-"},
@@ -18,6 +18,7 @@ func TestOperandsRecognizing(t *testing.T) {
 		{Type: token.RPAREN, Literal: ")"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.ASSIGN, Literal: "="},
+		{Type: token.ILLEGAL, Literal: "$"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {
@@ -58,6 +59,22 @@ func TestNumbersRecognizing(t *testing.T) {
 				Literal: "123456",
 			},
 		},
+		{
+			desc:   "invalid number",
+			source: "1a2",
+			expected: token.Token{
+				Type:    token.ILLEGAL,
+				Literal: "1a",
+			},
+		},
+		{
+			desc:   "scientific notation",
+			source: "1.2e3",
+			expected: token.Token{
+				Type:    token.FLOAT,
+				Literal: "1.2e3",
+			},
+		},
 	}
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
@@ -71,7 +88,7 @@ func TestNumbersRecognizing(t *testing.T) {
 }
 
 func TestExpression(t *testing.T) {
-	source := "-1 + (10 - a) * 3.5 / foo"
+	source := "-1 + (10 - a) * 3.5 / foo1_b"
 	expected := []token.Token{
 		{Type: token.SUB, Literal: "-"},
 		{Type: token.INT, Literal: "1"},
@@ -84,7 +101,7 @@ func TestExpression(t *testing.T) {
 		{Type: token.MUL, Literal: "*"},
 		{Type: token.FLOAT, Literal: "3.5"},
 		{Type: token.DIV, Literal: "/"},
-		{Type: token.IDENT, Literal: "foo"},
+		{Type: token.IDENT, Literal: "foo1_b"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {

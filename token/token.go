@@ -1,6 +1,9 @@
 package token
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type TokenType int
 
@@ -92,7 +95,7 @@ func (t Token) Is(t2 TokenType) bool {
 }
 
 func (t Token) String() string {
-	return t.Literal
+	return fmt.Sprintf("[%s] %s", tokens[t.Type], t.Literal)
 }
 
 // TODO: use smaller numbers for precedence

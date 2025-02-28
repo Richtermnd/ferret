@@ -72,8 +72,43 @@ func TestEvalFloatExpression(t *testing.T) {
 	}{
 		{
 			desc:     "simple",
-			source:   "1.23",
-			expected: 1.23,
+			source:   "69.69",
+			expected: 69.69,
+		},
+		{
+			desc:     "scientific",
+			source:   "0.6969e2",
+			expected: 0.6969e2,
+		},
+		{
+			desc:     "sum",
+			source:   "34.5 + 34.5",
+			expected: 69,
+		},
+		{
+			desc:     "sub",
+			source:   "71.5 - 2.5",
+			expected: 69.0,
+		},
+		{
+			desc:     "mul",
+			source:   "23.23 * 3",
+			expected: 69.69,
+		},
+		{
+			desc:     "div",
+			source:   "103.5 / 1.5",
+			expected: 69,
+		},
+		{
+			desc:     "few operands",
+			source:   "34.5 + 17.25 * 2 + 0.69",
+			expected: 69.69,
+		},
+		{
+			desc:     "paranthesis",
+			source:   "34.5 + (20 - 2.5) * 2 - 0.5",
+			expected: 69.0,
 		},
 	}
 	for _, tt := range testCases {
@@ -86,9 +121,10 @@ func TestEvalFloatExpression(t *testing.T) {
 
 func TestLetStatement(t *testing.T) {
 	testCases := []struct {
-		desc   string
-		source string
-		value  int64
+		desc    string
+		source  string
+		value   int64
+		wantErr bool
 	}{
 		{
 			desc:   "simple let statement",
@@ -135,7 +171,7 @@ func testIntegerObject(t *testing.T, obj object.Object, value int64) bool {
 		return false
 	}
 	if intObj.Value != value {
-		t.Errorf("Wrong value, expected: %d got: %d\n", intObj.Value, value)
+		t.Errorf("Wrong value, expected: %d got: %d\n", value, intObj.Value)
 		return false
 	}
 	return true
