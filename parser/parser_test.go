@@ -12,7 +12,7 @@ import (
 
 func checkParserErrors(t *testing.T, p *parser.Parser) {
 	errs := p.Errors()
-	if len(errs) == 0 {
+	if !p.HasErrors() {
 		return
 	}
 	for _, err := range errs {
@@ -242,7 +242,7 @@ func TestInfixExpressions(t *testing.T) {
 	}
 }
 
-func TestParenthesis(t *testing.T) {
+func TestParenthesisExpressions(t *testing.T) {
 	testCases := []struct {
 		desc   string
 		input  string
@@ -286,4 +286,63 @@ func TestParenthesis(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLetStatements(t *testing.T) {
+	testCases := []struct {
+		desc       string
+		input      string
+		identifier string
+		value      string
+	}{
+		{
+			desc:       "simple assignment",
+			input:      "let a = 5",
+			identifier: "a",
+			value:      "5",
+		},
+		{
+			desc:       "complex assignment",
+			input:      "let a = -5 * (1 + 2)",
+			identifier: "a",
+			value:      "((-5)*(1+2))",
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.desc, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := parser.New(l)
+			program := p.Parse()
+			checkParserErrors(t, p)
+			if len(program.Statements) != 1 {
+				t.Log(program.Statements)
+				t.Fatalf("Expected num of expressions %d got %d\n", 1, len(program.Statements))
+			}
+			testLetStatement(t, program.Statements[0], tt.identifier, tt.value)
+		})
+	}
+}
+
+func testLetStatement(t *testing.T, s ast.Statement, name, value string) bool {
+	if s.Literal() != "let" {
+		t.Errorf("mismatch literals expected let got: %s", s.Literal())
+		return false
+	}
+	letStmt, ok := s.(*ast.LetStatement)
+	if !ok {
+		t.Errorf("mismatch statement type expected: *ast.LetStatement got: %T\n", s)
+		return false
+	}
+	if letStmt.Name.Value != name {
+		t.Errorf("mismatch identifier value expected: %s got: %s\n", name, letStmt.Name.Value)
+		return false
+	}
+	if letStmt.Name.Literal() != name {
+		t.Errorf("mismatch identifier literal expected: %s got: %s\n", name, letStmt.Name.Literal())
+		return false
+	}
+	if letStmt.Value.String() != value {
+		t.Errorf("mismatch value expected: %s got %s\n", value, letStmt.Value.String())
+	}
+	return true
 }

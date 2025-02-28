@@ -3,6 +3,7 @@ package object
 type ObjectType string
 
 const (
+	ERROR_OBJ   = "ERROR"
 	INTEGER_OBJ = "INTEGER"
 	FLOAT_OBJ   = "FLOAT"
 )

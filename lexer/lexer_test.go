@@ -8,14 +8,16 @@ import (
 )
 
 func TestOperandsRecognizing(t *testing.T) {
-	source := "+-*/()"
+	source := "+ - * / ( ) ; ="
 	expected := []token.Token{
-		token.NoLiteralToken(token.ADD),
-		token.NoLiteralToken(token.SUB),
-		token.NoLiteralToken(token.MUL),
-		token.NoLiteralToken(token.DIV),
-		token.NoLiteralToken(token.LPAREN),
-		token.NoLiteralToken(token.RPAREN),
+		{Type: token.ADD, Literal: "+"},
+		{Type: token.SUB, Literal: "-"},
+		{Type: token.MUL, Literal: "*"},
+		{Type: token.DIV, Literal: "/"},
+		{Type: token.LPAREN, Literal: "("},
+		{Type: token.RPAREN, Literal: ")"},
+		{Type: token.SEMICOLON, Literal: ";"},
+		{Type: token.ASSIGN, Literal: "="},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {
@@ -69,34 +71,21 @@ func TestNumbersRecognizing(t *testing.T) {
 }
 
 func TestExpression(t *testing.T) {
-	source := "1 + (10 - 2) * 3.5 / 4"
+	source := "1 + (10 - 2) * 3.5 / 4 a foo"
 	expected := []token.Token{
-		{
-			Type:    token.INT,
-			Literal: "1",
-		},
-		token.NoLiteralToken(token.ADD),
-		token.NoLiteralToken(token.LPAREN),
-		{
-			Type:    token.INT,
-			Literal: "10",
-		},
-		token.NoLiteralToken(token.SUB),
-		{
-			Type:    token.INT,
-			Literal: "2",
-		},
-		token.NoLiteralToken(token.RPAREN),
-		token.NoLiteralToken(token.MUL),
-		{
-			Type:    token.FLOAT,
-			Literal: "3.5",
-		},
-		token.NoLiteralToken(token.DIV),
-		{
-			Type:    token.INT,
-			Literal: "4",
-		},
+		{Type: token.INT, Literal: "1"},
+		{Type: token.ADD, Literal: "+"},
+		{Type: token.LPAREN, Literal: "("},
+		{Type: token.INT, Literal: "10"},
+		{Type: token.SUB, Literal: "-"},
+		{Type: token.INT, Literal: "2"},
+		{Type: token.RPAREN, Literal: ")"},
+		{Type: token.MUL, Literal: "*"},
+		{Type: token.FLOAT, Literal: "3.5"},
+		{Type: token.DIV, Literal: "/"},
+		{Type: token.INT, Literal: "4"},
+		{Type: token.IDENT, Literal: "a"},
+		{Type: token.IDENT, Literal: "foo"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {
@@ -104,6 +93,24 @@ func TestExpression(t *testing.T) {
 		t.Logf("%s\n", tok.Literal)
 		if expectedToken != tok {
 			t.Errorf("[%d] expected: %s got: %s\n", i, expectedToken.Literal, tok.Literal)
+		}
+	}
+}
+
+func TestKeywords(t *testing.T) {
+	source := "let"
+	expected := []token.Token{
+		{Type: token.LET, Literal: "let"},
+	}
+	l := lexer.New(source)
+	for i, expectedToken := range expected {
+		tok := l.NextToken()
+		t.Logf("%s\n", tok.Literal)
+		if expectedToken.Type != tok.Type {
+			t.Errorf("[%d] mismatch type expected: %d got: %d\n", i, expectedToken.Type, tok.Type)
+		}
+		if expectedToken != tok {
+			t.Errorf("[%d] mismatch literals expected: %s got: %s\n", i, expectedToken.Literal, tok.Literal)
 		}
 	}
 }

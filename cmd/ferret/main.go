@@ -16,7 +16,7 @@ func init() {
 	flag.Parse()
 }
 
-func eval(source string) object.Object {
+func eval(env *object.Environment, source string) object.Object {
 	l := lexer.New(source)
 	p := parser.New(l)
 	program := p.Parse()
@@ -24,21 +24,17 @@ func eval(source string) object.Object {
 		p.PrintErrors(os.Stderr)
 		return nil
 	}
-	evaluated := evaluator.Eval(program)
-	if evaluated != nil {
-		return evaluated
-	} else {
-		fmt.Fprintln(os.Stderr, "failed to avaluate")
-		return nil
-	}
+	fmt.Printf("program.Statements: %v\n", program.Statements)
+	return evaluator.Eval(env, program)
 }
 
 func repl() {
 	const prompt = ">> "
 	s := bufio.NewScanner(os.Stdin)
+	env := object.NewEnv()
 	fmt.Print(prompt)
 	for s.Scan() {
-		evaluated := eval(s.Text())
+		evaluated := eval(env, s.Text())
 		if evaluated != nil {
 			fmt.Println(evaluated.Inspect())
 		}
@@ -59,6 +55,7 @@ func main() {
 		if err != nil {
 			fatalf("failed to read %s: %v\n", flag.Arg(0), err)
 		}
-		eval(string(source))
+		env := object.NewEnv()
+		eval(env, string(source))
 	}
 }

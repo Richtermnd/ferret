@@ -16,7 +16,7 @@ func (o *Integer) Add(right Object) Object {
 	case *Float:
 		return &Float{Value: float64(o.Value) + right.Value}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", o.Type(), "+", right.Type())
 	}
 }
 
@@ -31,7 +31,7 @@ func (o *Integer) Sub(right Object) Object {
 	case *Float:
 		return &Float{Value: float64(o.Value) - right.Value}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", o.Type(), "-", right.Type())
 	}
 }
 
@@ -42,7 +42,7 @@ func (o *Integer) Rsub(left Object) Object {
 	case *Float:
 		return &Float{Value: left.Value - float64(o.Value)}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", left.Type(), "-", o.Type())
 	}
 }
 
@@ -53,7 +53,7 @@ func (o *Integer) Mul(right Object) Object {
 	case *Float:
 		return &Float{Value: float64(o.Value) * right.Value}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", o.Type(), "*", right.Type())
 	}
 }
 
@@ -68,7 +68,7 @@ func (o *Integer) Div(right Object) Object {
 	case *Float:
 		return &Float{Value: float64(o.Value) / right.Value}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", o.Type(), "/", right.Type())
 	}
 }
 
@@ -79,6 +79,6 @@ func (o *Integer) Rdiv(left Object) Object {
 	case *Float:
 		return &Float{Value: left.Value / float64(o.Value)}
 	default:
-		return nil
+		return NewError(UNSUPPORTED_ERR, "%s %s %s", left.Type(), "/", o.Type())
 	}
 }

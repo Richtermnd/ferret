@@ -84,9 +84,33 @@ func TestEvalFloatExpression(t *testing.T) {
 	}
 }
 
+func TestLetStatement(t *testing.T) {
+	testCases := []struct {
+		desc   string
+		source string
+		value  int64
+	}{
+		{
+			desc:   "simple let statement",
+			source: "let a = 1; a",
+			value:  1,
+		},
+		{
+			desc:   "complex let statement",
+			source: "let a = 10 - (3 + 1) * 2; a",
+			value:  2,
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.desc, func(t *testing.T) {
+			testIntegerObject(t, testEval(t, tt.source), tt.value)
+		})
+	}
+}
+
 func checkParserErrors(t *testing.T, p *parser.Parser) {
 	errs := p.Errors()
-	if len(errs) == 0 {
+	if !p.HasErrors() {
 		return
 	}
 	for _, err := range errs {
@@ -100,7 +124,8 @@ func testEval(t *testing.T, source string) object.Object {
 	p := parser.New(l)
 	program := p.Parse()
 	checkParserErrors(t, p)
-	return evaluator.Eval(program)
+	env := object.NewEnv()
+	return evaluator.Eval(env, program)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, value int64) bool {

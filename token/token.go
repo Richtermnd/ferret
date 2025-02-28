@@ -4,6 +4,10 @@ import "strconv"
 
 type TokenType int
 
+func (t TokenType) String() string {
+	return tokens[t]
+}
+
 const (
 	ILLEGAL TokenType = iota
 	EOF
@@ -11,19 +15,26 @@ const (
 
 	// cool idea, that i stole from go source code
 	literal_begin
+	IDENT // a
 	INT   // 2
 	FLOAT // 2.5
 	literal_end
 
 	operators_begin
-	ADD    // +
-	SUB    // -
-	MUL    // *
-	DIV    // /
-	REM    // %
-	LPAREN // (
-	RPAREN // )
+	ADD       // +
+	SUB       // -
+	MUL       // *
+	DIV       // /
+	REM       // %
+	LPAREN    // (
+	RPAREN    // )
+	ASSIGN    // =
+	SEMICOLON // ;
 	operators_end
+
+	keywords_begin
+	LET // let
+	keywords_end
 )
 
 var tokens = [...]string{
@@ -34,13 +45,29 @@ var tokens = [...]string{
 	INT:   "int",
 	FLOAT: "float",
 
-	ADD:    "+",
-	SUB:    "-",
-	MUL:    "*",
-	DIV:    "/",
-	REM:    "%",
-	LPAREN: "(",
-	RPAREN: ")",
+	ADD:       "+",
+	SUB:       "-",
+	MUL:       "*",
+	DIV:       "/",
+	REM:       "%",
+	LPAREN:    "(",
+	RPAREN:    ")",
+	ASSIGN:    "=",
+	SEMICOLON: ";",
+}
+
+// vim replace command for <TokenType> // <litetal> -> "<literal>": <TokenType>
+// s/\(\w\+\)\s\+\/\/\s\+\(.\+\)/"\2": \1,
+
+var keywords = map[string]TokenType{
+	"let": LET,
+}
+
+func LookupKeyword(literal string) TokenType {
+	if keyword, ok := keywords[literal]; ok {
+		return keyword
+	}
+	return IDENT
 }
 
 type Token struct {
@@ -54,6 +81,10 @@ func (t Token) IsLiteral() bool {
 
 func (t Token) IsOperator() bool {
 	return operators_begin < t.Type && t.Type < operators_end
+}
+
+func (t Token) IsKeyword() bool {
+	return keywords_begin < t.Type && t.Type < keywords_end
 }
 
 func (t Token) Is(t2 TokenType) bool {

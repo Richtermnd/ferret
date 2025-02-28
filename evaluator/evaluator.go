@@ -5,13 +5,23 @@ import (
 	"github.com/Richtermnd/ferret/object"
 )
 
-func Eval(node ast.Node) object.Object {
+func Eval(env *object.Environment, node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalStatements(env, node.Statements)
+
+	case *ast.Identifier:
+		return evalIdentifier(env, node)
+
+	case *ast.LetStatement:
+		value := Eval(env, node.Value)
+		if object.IsError(value) {
+			return value
+		}
+		env.Set(node.Name.Value, value)
 
 	case *ast.ExpressionStatement:
-		return Eval(node.Expr)
+		return Eval(env, node.Expr)
 
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -20,23 +30,32 @@ func Eval(node ast.Node) object.Object {
 		return &object.Float{Value: node.Value}
 
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
+		right := Eval(env, node.Right)
 		return evalPrefixExpression(node.Operator, right)
 
 	case *ast.InfixExpression:
-		left := Eval(node.Left)
-		right := Eval(node.Right)
+		left := Eval(env, node.Left)
+		right := Eval(env, node.Right)
 		return evalInfixExpression(node.Operator, left, right)
 	}
+
 	return nil
 }
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalStatements(env *object.Environment, stmts []ast.Statement) object.Object {
 	var res object.Object
 	for _, stmt := range stmts {
-		res = Eval(stmt)
+		res = Eval(env, stmt)
 	}
 	return res
+}
+
+func evalIdentifier(env *object.Environment, node *ast.Identifier) object.Object {
+	obj, ok := env.Get(node.Value)
+	if !ok {
+		return object.NewError(object.NOT_FOUND_ERR, "%s", node.Value)
+	}
+	return obj
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {
@@ -44,7 +63,7 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 	case "-":
 		return evalMinusPrefixOperator(right)
 	}
-	return nil
+	return object.NewError(object.UNKNOWN_OPERATOR_ERR, "%s%s", op, right.Type())
 }
 
 func evalMinusPrefixOperator(right object.Object) object.Object {
@@ -54,7 +73,7 @@ func evalMinusPrefixOperator(right object.Object) object.Object {
 	case object.FLOAT_OBJ:
 		return &object.Float{Value: -right.(*object.Float).Value}
 	}
-	return nil
+	return object.NewError(object.UNSUPPORTED_ERR, "-%s", right.Type())
 }
 
 func evalInfixExpression(op string, left, right object.Object) object.Object {
@@ -68,20 +87,20 @@ func evalInfixExpression(op string, left, right object.Object) object.Object {
 	case "/":
 		return div(left, right)
 	}
-	return nil
+	return object.NewError(object.UNKNOWN_OPERATOR_ERR, "%s %s %s", left.Type(), op, right.Type())
 }
 
 func add(left, right object.Object) object.Object {
 	leftAdder, ok := left.(object.Adder)
 	if ok {
 		res := leftAdder.Add(right)
-		if res != nil {
+		if !object.IsError(res) {
 			return res
 		}
 	}
 	rightAdder, ok := right.(object.Adder)
 	if !ok {
-		return nil
+		return object.NewError(object.NOT_IMPLEMENTED_ERR, "%s + %s", left.Type(), right.Type())
 	}
 	return rightAdder.Radd(left)
 }
@@ -91,13 +110,13 @@ func sub(left, right object.Object) object.Object {
 	leftSuber, ok := left.(object.Suber)
 	if ok {
 		res = leftSuber.Sub(right)
-		if res != nil {
+		if !object.IsError(res) {
 			return res
 		}
 	}
 	rightSuber, ok := right.(object.Suber)
 	if !ok {
-		return nil
+		return object.NewError(object.NOT_IMPLEMENTED_ERR, "%s - %s", left.Type(), right.Type())
 	}
 	return rightSuber.Rsub(left)
 }
@@ -107,13 +126,13 @@ func mul(left, right object.Object) object.Object {
 	leftMuler, ok := left.(object.Muler)
 	if ok {
 		res = leftMuler.Mul(right)
-		if res != nil {
+		if !object.IsError(res) {
 			return res
 		}
 	}
 	rightMuler, ok := right.(object.Muler)
 	if !ok {
-		return nil
+		return object.NewError(object.NOT_IMPLEMENTED_ERR, "%s * %s", left.Type(), right.Type())
 	}
 	return rightMuler.Rmul(left)
 }
@@ -123,14 +142,14 @@ func div(left, right object.Object) object.Object {
 	leftDiver, ok := left.(object.Diver)
 	if ok {
 		res = leftDiver.Div(right)
-		if res != nil {
+		if !object.IsError(res) {
 			return res
 		}
 	}
 
 	rightDiver, ok := right.(object.Diver)
 	if !ok {
-		return nil
+		return object.NewError(object.NOT_IMPLEMENTED_ERR, "%s / %s", left.Type(), right.Type())
 	}
 	return rightDiver.Rdiv(left)
 }

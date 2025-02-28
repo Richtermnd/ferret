@@ -46,19 +46,28 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LPAREN, "(")
 	case ')':
 		tok = newToken(token.RPAREN, ")")
+	case '=':
+		tok = newToken(token.ASSIGN, "=")
+	case ';':
+		tok = newToken(token.SEMICOLON, ";")
 	case '\n':
 		tok = newToken(token.LF, "\\n")
 	default:
-		if isDigit(l.ch) {
+		if isLetter(l.ch) {
+			literal := l.readIdentifier()
+			t := token.LookupKeyword(literal)
+			tok = newToken(t, literal)
+
+		} else if isDigit(l.ch) {
 			literal, t := l.readNumber()
 			if literal == "" {
-				tok = newToken(token.ILLEGAL, "ILLEGAL")
+				tok = newToken(token.ILLEGAL, literal)
 			} else {
-				tok.Type = t
-				tok.Literal = literal
+				tok = newToken(t, literal)
 			}
+
 		} else {
-			tok = newToken(token.ILLEGAL, "ILLEGAL")
+			tok = newToken(token.ILLEGAL, string(l.ch))
 		}
 	}
 
@@ -103,6 +112,14 @@ func (l *Lexer) skipWhitespaces() {
 	}
 }
 
+func (l *Lexer) readIdentifier() string {
+	startPos := l.pos
+	for isLetter(l.ch) || l.ch == '_' {
+		l.readChar()
+	}
+	return l.source[startPos:l.pos]
+}
+
 // readNumber read number, ignore '_' (python like syntax)
 // TODO: check for invalid number
 func (l *Lexer) readNumber() (string, token.TokenType) {
@@ -120,6 +137,10 @@ func (l *Lexer) readNumber() (string, token.TokenType) {
 	}
 	l.unreadChar()
 	return sb.String(), t
+}
+
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z'
 }
 
 func isDigit(ch byte) bool {

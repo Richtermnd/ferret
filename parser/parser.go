@@ -32,6 +32,7 @@ func New(l *lexer.Lexer) *Parser {
 		prefixParseFns: make(map[token.TokenType]prefixParseFn),
 		infixParseFns:  make(map[token.TokenType]infixParseFn),
 	}
+	p.prefixParseFns[token.IDENT] = p.parseIdentifier
 	p.prefixParseFns[token.INT] = p.parseIntegerLiteral
 	p.prefixParseFns[token.FLOAT] = p.parseFloatLiteral
 	p.prefixParseFns[token.SUB] = p.parsePrefixExpression
@@ -51,7 +52,7 @@ func (p *Parser) Parse() *ast.Program {
 	program := new(ast.Program)
 	for p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
-		if stmt != nil {
+		if !p.HasErrors() {
 			program.Statements = append(program.Statements, stmt)
 		}
 		p.nextToken()
@@ -62,10 +63,34 @@ func (p *Parser) Parse() *ast.Program {
 func (p *Parser) parseStatement() ast.Statement {
 	// Here will be other tokens like var, functions declarations assignment and other
 	// Everything other - expressions
-	switch p.curToken {
+	switch p.curToken.Type {
+	case token.LET:
+		return p.parseLetStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+}
+
+func (p *Parser) parseLetStatement() *ast.LetStatement {
+	stmt := &ast.LetStatement{Token: p.curToken}
+
+	p.nextToken()
+	if !p.curToken.Is(token.IDENT) {
+		p.errors = append(p.errors, fmt.Errorf("expected identifier, got %v", p.curToken.Type))
+		return nil
+	}
+	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	p.nextToken()
+	if !p.curToken.Is(token.ASSIGN) {
+		p.errors = append(p.errors, fmt.Errorf("expected =, got %v", p.curToken.Type))
+	}
+	p.nextToken()
+	stmt.Value = p.parseExpression(token.LOWEST)
+	return stmt
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
@@ -82,13 +107,16 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 
 	leftExp := prefixParser()
-	for !p.peekToken.Is(token.LF) && precedence < p.peekPrecedence() {
+	for (!p.peekToken.Is(token.LF) || !p.peekToken.Is(token.SEMICOLON)) && precedence < p.peekPrecedence() {
 		infix, ok := p.infixParseFns[p.peekToken.Type]
 		if !ok {
 			return leftExp
 		}
 		p.nextToken()
 		leftExp = infix(leftExp)
+	}
+	if p.peekToken.Is(token.LF) || p.peekToken.Is(token.SEMICOLON) {
+		p.nextToken()
 	}
 	return leftExp
 }
