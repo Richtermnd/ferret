@@ -71,20 +71,19 @@ func TestNumbersRecognizing(t *testing.T) {
 }
 
 func TestExpression(t *testing.T) {
-	source := "1 + (10 - 2) * 3.5 / 4 a foo"
+	source := "-1 + (10 - a) * 3.5 / foo"
 	expected := []token.Token{
+		{Type: token.SUB, Literal: "-"},
 		{Type: token.INT, Literal: "1"},
 		{Type: token.ADD, Literal: "+"},
 		{Type: token.LPAREN, Literal: "("},
 		{Type: token.INT, Literal: "10"},
 		{Type: token.SUB, Literal: "-"},
-		{Type: token.INT, Literal: "2"},
+		{Type: token.IDENT, Literal: "a"},
 		{Type: token.RPAREN, Literal: ")"},
 		{Type: token.MUL, Literal: "*"},
 		{Type: token.FLOAT, Literal: "3.5"},
 		{Type: token.DIV, Literal: "/"},
-		{Type: token.INT, Literal: "4"},
-		{Type: token.IDENT, Literal: "a"},
 		{Type: token.IDENT, Literal: "foo"},
 	}
 	l := lexer.New(source)

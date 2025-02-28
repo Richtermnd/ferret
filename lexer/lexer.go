@@ -117,7 +117,8 @@ func (l *Lexer) readIdentifier() string {
 	for isLetter(l.ch) || l.ch == '_' {
 		l.readChar()
 	}
-	return l.source[startPos:l.pos]
+	l.unreadChar()
+	return l.source[startPos : l.pos+1]
 }
 
 // readNumber read number, ignore '_' (python like syntax)
