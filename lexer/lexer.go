@@ -32,6 +32,10 @@ func (l *Lexer) NextToken() token.Token {
 	switch l.ch {
 	case '\000':
 		tok = newToken(token.EOF, string(l.ch))
+	case '\n':
+		tok = newToken(token.LF, "\\n")
+	case ';':
+		tok = newToken(token.SEMICOLON, ";")
 	case '+':
 		tok = newToken(token.ADD, "+")
 	case '-':
@@ -47,11 +51,13 @@ func (l *Lexer) NextToken() token.Token {
 	case ')':
 		tok = newToken(token.RPAREN, ")")
 	case '=':
-		tok = newToken(token.ASSIGN, "=")
-	case ';':
-		tok = newToken(token.SEMICOLON, ";")
-	case '\n':
-		tok = newToken(token.LF, "\\n")
+		tok = l.switchSuffix(token.ASSIGN, token.EQ, '=')
+	case '!':
+		tok = l.switchSuffix(token.NOT, token.NEQ, '=')
+	case '>':
+		tok = l.switchSuffix(token.GT, token.GEQ, '=')
+	case '<':
+		tok = l.switchSuffix(token.LT, token.LEQ, '=')
 	default:
 		if isLetter(l.ch) {
 			literal := l.readIdentifier()
@@ -165,4 +171,15 @@ func newToken(t token.TokenType, lit string) token.Token {
 		Type:    t,
 		Literal: lit,
 	}
+}
+
+func (l *Lexer) switchSuffix(t1, t2 token.TokenType, suffixCh byte) token.Token {
+	var tok token.Token
+	if peekChar := l.peekChar(); peekChar == suffixCh {
+		tok = token.Token{Type: t2, Literal: string(l.ch) + string(peekChar)}
+		l.readChar()
+		return tok
+
+	}
+	return token.Token{Type: t1, Literal: string(l.ch)}
 }

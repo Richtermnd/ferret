@@ -1,6 +1,10 @@
 package object
 
-import "fmt"
+import (
+	"fmt"
+)
+
+const INTEGER_OBJ ObjectType = "INTEGER"
 
 type Integer struct {
 	Value int64
@@ -80,5 +84,27 @@ func (o *Integer) Rdiv(left Object) Object {
 		return &Float{Value: left.Value / float64(o.Value)}
 	default:
 		return NewError(UNSUPPORTED_ERR, "%s %s %s", left.Type(), "/", o.Type())
+	}
+}
+
+func (o *Integer) LesserThan(right Object) Object {
+	switch r := right.(type) {
+	case *Integer:
+		return &Bool{Value: o.Value < r.Value}
+	case *Float:
+		return &Bool{Value: float64(o.Value) < r.Value}
+	default:
+		return NewError(UNSUPPORTED_ERR, "%s and %s not comparable", o.Type(), r.Type())
+	}
+}
+
+func (o *Integer) Equal(right Object) Object {
+	switch r := right.(type) {
+	case *Integer:
+		return &Bool{Value: o.Value == r.Value}
+	case *Float:
+		return &Bool{Value: float64(o.Value) == r.Value}
+	default:
+		return NewError(UNSUPPORTED_ERR, "%s and %s not comparable", o.Type(), r.Type())
 	}
 }

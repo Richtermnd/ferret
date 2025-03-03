@@ -24,7 +24,6 @@ func eval(env *object.Environment, source string) object.Object {
 		p.PrintErrors(os.Stderr)
 		return nil
 	}
-	fmt.Printf("program.Statements: %v\n", program.Statements)
 	return evaluator.Eval(env, program)
 }
 

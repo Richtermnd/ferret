@@ -7,6 +7,22 @@ import (
 
 type TokenType int
 
+func (t TokenType) IsLiteral() bool {
+	return literal_begin < t && t < literal_end
+}
+
+func (t TokenType) IsOperator() bool {
+	return operators_begin < t && t < operators_end
+}
+
+func (t TokenType) IsKeyword() bool {
+	return keywords_begin < t && t < keywords_end
+}
+
+func (t TokenType) Is(t2 TokenType) bool {
+	return t == t2
+}
+
 func (t TokenType) String() string {
 	return tokens[t]
 }
@@ -21,6 +37,7 @@ const (
 	IDENT // a
 	INT   // 2
 	FLOAT // 2.5
+	BOOL  // true | false
 	literal_end
 
 	operators_begin
@@ -31,12 +48,23 @@ const (
 	REM       // %
 	LPAREN    // (
 	RPAREN    // )
-	ASSIGN    // =
 	SEMICOLON // ;
+	ASSIGN    // =
+	EQ        // ==
+	NOT       // !
+	NEQ       // !=
+	GT        // >
+	GEQ       // >=
+	LT        // <
+	LEQ       // <=
 	operators_end
 
 	keywords_begin
-	LET // let
+	LET   // let
+	TRUE  // true
+	FALSE // false
+	AND   // and
+	OR    // or
 	keywords_end
 )
 
@@ -45,8 +73,10 @@ var tokens = [...]string{
 	EOF:     "EOF",
 	LF:      "\\n",
 
+	IDENT: "ident",
 	INT:   "int",
 	FLOAT: "float",
+	BOOL:  "bool",
 
 	ADD:       "+",
 	SUB:       "-",
@@ -55,17 +85,36 @@ var tokens = [...]string{
 	REM:       "%",
 	LPAREN:    "(",
 	RPAREN:    ")",
-	ASSIGN:    "=",
 	SEMICOLON: ";",
+	ASSIGN:    "=",
+	EQ:        "==",
+	NOT:       "!",
+	NEQ:       "!=",
+	GT:        ">",
+	GEQ:       ">=",
+	LT:        "<",
+	LEQ:       "<=",
+
+	LET:   "let",
+	TRUE:  "true",
+	FALSE: "false",
+	AND:   "and",
+	OR:    "or",
 }
 
 // vim replace command for <TokenType> // <litetal> -> "<literal>": <TokenType>
 // s/\(\w\+\)\s\+\/\/\s\+\(.\+\)/"\2": \1,
 
 var keywords = map[string]TokenType{
-	"let": LET,
+	"let":   LET,
+	"true":  TRUE,
+	"false": FALSE,
+	"and":   AND,
+	"or":    OR,
 }
 
+// LookupKeyword lookup in keywords table
+// and return the appropriate TokenType on found and IDENT otherwise
 func LookupKeyword(literal string) TokenType {
 	if keyword, ok := keywords[literal]; ok {
 		return keyword
@@ -107,10 +156,14 @@ const (
 
 func (t Token) Precedence() int {
 	switch t.Type {
-	case ADD, SUB:
+	case EQ, NEQ, GT, GEQ, LT, LEQ:
 		return 10
-	case MUL, DIV, REM:
+	case ADD, SUB:
 		return 20
+	case MUL, DIV, REM:
+		return 30
+	case NOT:
+		return UNARY
 	default:
 		return LOWEST
 	}

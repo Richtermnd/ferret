@@ -8,7 +8,7 @@ import (
 )
 
 func TestOperandsRecognizing(t *testing.T) {
-	source := "+ - * / ( ) ; = $"
+	source := "+ - * / ( ) ; = == ! != > >= < <= $"
 	expected := []token.Token{
 		{Type: token.ADD, Literal: "+"},
 		{Type: token.SUB, Literal: "-"},
@@ -18,11 +18,19 @@ func TestOperandsRecognizing(t *testing.T) {
 		{Type: token.RPAREN, Literal: ")"},
 		{Type: token.SEMICOLON, Literal: ";"},
 		{Type: token.ASSIGN, Literal: "="},
+		{Type: token.EQ, Literal: "=="},
+		{Type: token.NOT, Literal: "!"},
+		{Type: token.NEQ, Literal: "!="},
+		{Type: token.GT, Literal: ">"},
+		{Type: token.GEQ, Literal: ">="},
+		{Type: token.LT, Literal: "<"},
+		{Type: token.LEQ, Literal: "<="},
 		{Type: token.ILLEGAL, Literal: "$"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {
 		tok := l.NextToken()
+		t.Log(tok)
 		if expectedToken != tok {
 			t.Errorf("[%d] expected: %+v got: %+v\n", i, expectedToken, tok)
 		}
@@ -88,7 +96,7 @@ func TestNumbersRecognizing(t *testing.T) {
 }
 
 func TestExpression(t *testing.T) {
-	source := "-1 + (10 - a) * 3.5 / foo1_b"
+	source := "-1 + (10 - a) * 3.5 / foo1_b !true false"
 	expected := []token.Token{
 		{Type: token.SUB, Literal: "-"},
 		{Type: token.INT, Literal: "1"},
@@ -102,6 +110,9 @@ func TestExpression(t *testing.T) {
 		{Type: token.FLOAT, Literal: "3.5"},
 		{Type: token.DIV, Literal: "/"},
 		{Type: token.IDENT, Literal: "foo1_b"},
+		{Type: token.NOT, Literal: "!"},
+		{Type: token.TRUE, Literal: "true"},
+		{Type: token.FALSE, Literal: "false"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {
@@ -114,9 +125,13 @@ func TestExpression(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
-	source := "let"
+	source := "let true false and or"
 	expected := []token.Token{
 		{Type: token.LET, Literal: "let"},
+		{Type: token.TRUE, Literal: "true"},
+		{Type: token.FALSE, Literal: "false"},
+		{Type: token.AND, Literal: "and"},
+		{Type: token.OR, Literal: "or"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {

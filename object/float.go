@@ -82,3 +82,25 @@ func (o *Float) Rdiv(left Object) Object {
 		return NewError(UNSUPPORTED_ERR, "%s %s %s", left.Type(), "/", o.Type())
 	}
 }
+
+func (o *Float) LesserThan(right Object) Object {
+	switch r := right.(type) {
+	case *Integer:
+		return &Bool{Value: o.Value < float64(r.Value)}
+	case *Float:
+		return &Bool{Value: float64(o.Value) < r.Value}
+	default:
+		return NewError(UNSUPPORTED_ERR, "%s and %s not comparable", o.Type(), r.Type())
+	}
+}
+
+func (o *Float) Equal(right Object) Object {
+	switch r := right.(type) {
+	case *Integer:
+		return &Bool{Value: o.Value == float64(r.Value)}
+	case *Float:
+		return &Bool{Value: float64(o.Value) == r.Value}
+	default:
+		return NewError(UNSUPPORTED_ERR, "%s and %s not comparable", o.Type(), r.Type())
+	}
+}

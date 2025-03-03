@@ -1,6 +1,7 @@
 package evaluator_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Richtermnd/ferret/evaluator"
@@ -116,6 +117,75 @@ func TestEvalFloatExpression(t *testing.T) {
 			evaluated := testEval(t, tt.source)
 			testFloatObject(t, evaluated, tt.expected)
 		})
+	}
+}
+
+func TestEvalBoolExpression(t *testing.T) {
+	const source = `
+    true true == true 
+    true false == false
+    false true == false
+    false true != true 
+    false false != false
+    true true != false
+
+    true 1 == 1
+    false 1 != 1
+    false 1 == 0
+    true 1 != 0
+    true 1 > 0 
+    true 1 >= 0
+    false 1 < 0 
+    false 1 <= 0
+    true 1.0 == 1.0
+    false 1.0 != 1.0
+    false 1.0 == 0.0
+    true 1.0 != 0.0
+    true 1.0 > 0.0
+    true 1.0 >= 0.0
+    false 1.0 < 0.0
+    false 1.0 <= 0.0
+
+    true 1 == true
+    false 1 != true
+    false 1 == false
+    true 1 != false
+    true 1 > false
+    true 1 >= false
+    false 1 < false
+    false 1 <= false
+
+    true 1.0 == true 
+    false 1.0 != true 
+    false 1.0 == false
+    true 1.0 != false
+    true 1.0 > false
+    true 1.0 >= false
+    false 1.0 < false
+    false 1.0 <= false`
+	for _, line := range strings.Split(source, "\n") {
+		if line == "" {
+			continue
+		}
+		line := strings.TrimSpace(line)
+		t.Log("line:", line)
+		expectedLine, expr, _ := strings.Cut(line, " ")
+		t.Log("expectedLine:", expectedLine)
+		t.Log("expr:", expr)
+
+		expected := testEval(t, expectedLine)
+		res := testEval(t, expr)
+		expBool, ok := expected.(*object.Bool)
+		if !ok {
+			t.Fatalf("[ERROR] wrong expected type: %T inspect: %s", expected, expected.Inspect())
+		}
+		resBool, ok := res.(*object.Bool)
+		if !ok {
+			t.Fatalf("[ERROR] wrong expr type: %T inspect: %s", res, res.Inspect())
+		}
+		if expBool.Value != resBool.Value {
+			t.Errorf("[ERROR] wrong comprassion: '%s' expected: %t got %t\n", expr, expBool.Value, resBool.Value)
+		}
 	}
 }
 

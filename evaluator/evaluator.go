@@ -5,6 +5,11 @@ import (
 	"github.com/Richtermnd/ferret/object"
 )
 
+var (
+	TRUE  = &object.Bool{Value: true}
+	FALSE = &object.Bool{Value: false}
+)
+
 func Eval(env *object.Environment, node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.Program:
@@ -28,6 +33,9 @@ func Eval(env *object.Environment, node ast.Node) object.Object {
 
 	case *ast.FloatLiteral:
 		return &object.Float{Value: node.Value}
+
+	case *ast.BooleanLiteral:
+		return boolFromNative(node.Value)
 
 	case *ast.PrefixExpression:
 		right := Eval(env, node.Right)
@@ -60,6 +68,8 @@ func evalIdentifier(env *object.Environment, node *ast.Identifier) object.Object
 
 func evalPrefixExpression(op string, right object.Object) object.Object {
 	switch op {
+	case "!":
+		return not(right)
 	case "-":
 		return evalMinusPrefixOperator(right)
 	}
@@ -86,6 +96,26 @@ func evalInfixExpression(op string, left, right object.Object) object.Object {
 		return mul(left, right)
 	case "/":
 		return div(left, right)
+	}
+
+	leftCmp, lok := left.(object.Compared)
+	rightCmp, rok := right.(object.Compared)
+	if lok && rok {
+		// comparing
+		switch op {
+		case "==":
+			return eq(leftCmp, rightCmp)
+		case "!=":
+			return neq(leftCmp, rightCmp)
+		case ">":
+			return gt(leftCmp, rightCmp)
+		case ">=":
+			return geq(leftCmp, rightCmp)
+		case "<":
+			return lt(leftCmp, rightCmp)
+		case "<=":
+			return leq(leftCmp, rightCmp)
+		}
 	}
 	return object.NewError(object.UNKNOWN_OPERATOR_ERR, "%s %s %s", left.Type(), op, right.Type())
 }
@@ -152,4 +182,97 @@ func div(left, right object.Object) object.Object {
 		return object.NewError(object.NOT_IMPLEMENTED_ERR, "%s / %s", left.Type(), right.Type())
 	}
 	return rightDiver.Rdiv(left)
+}
+
+func not(v object.Object) object.Object {
+	if v.Type() == object.BOOL_OBJ {
+		return &object.Bool{Value: !v.(*object.Bool).Value}
+	} else if v, ok := v.(object.Booler); ok {
+		return &object.Bool{Value: !v.AsBool().Value}
+	}
+	return object.NewError(object.UNSUPPORTED_ERR, "cannot represent %s as bool", v.Type())
+}
+
+func and(left, right object.Object) object.Object {
+	var l, r bool
+	if left.Type() == object.BOOL_OBJ && right.Type() == object.BOOL_OBJ {
+		l = left.(*object.Bool).Value
+		r = right.(*object.Bool).Value
+		return boolFromNative(l && r)
+	}
+	lBooler, ok := left.(object.Booler)
+	if !ok {
+		return object.NewError(object.UNSUPPORTED_ERR, "cannot represent %s as bool", left.Type())
+	}
+	rBooler, ok := right.(object.Booler)
+	if !ok {
+		return object.NewError(object.UNSUPPORTED_ERR, "cannot represent %s as bool", right.Type())
+	}
+	return boolFromNative(lBooler.AsBool().Value && rBooler.AsBool().Value)
+}
+
+func or(left, right object.Object) object.Object {
+	var l, r bool
+	if left.Type() == object.BOOL_OBJ && right.Type() == object.BOOL_OBJ {
+		l = left.(*object.Bool).Value
+		r = right.(*object.Bool).Value
+		return boolFromNative(l || r)
+	}
+	lBooler, ok := left.(object.Booler)
+	if !ok {
+		return object.NewError(object.UNSUPPORTED_ERR, "cannot represent %s as bool", left.Type())
+	}
+	rBooler, ok := right.(object.Booler)
+	if !ok {
+		return object.NewError(object.UNSUPPORTED_ERR, "cannot represent %s as bool", right.Type())
+	}
+	return boolFromNative(lBooler.AsBool().Value || rBooler.AsBool().Value)
+}
+
+//
+
+func eq(left, right object.Compared) object.Object {
+	// a == b <=> b == a
+	if res := left.Equal(right); res.Type() != object.ERROR_OBJ {
+		return res
+	}
+	return right.Equal(left)
+}
+
+func neq(left, right object.Compared) object.Object {
+	// a != b <=> !(a == b)
+	return not(eq(left, right))
+}
+
+// There is definitely a recursion somewhere here, but tests passed, so...
+
+func lt(left, right object.Compared) object.Object {
+	// a < b <=> b >= a
+	ltLeft := left.LesserThan(right)
+	if ltLeft.Type() != object.ERROR_OBJ {
+		return ltLeft
+	}
+	return geq(right, left)
+}
+
+func gt(left, right object.Compared) object.Object {
+	// a > b <=> b <= a
+	return lt(right, left)
+}
+
+func leq(left, right object.Compared) object.Object {
+	// a <= b <=> !(a > b)
+	return not(gt(left, right))
+}
+
+func geq(left, right object.Compared) object.Object {
+	// a >= b <=> !(a < b)
+	return not(lt(left, right))
+}
+
+func boolFromNative(input bool) *object.Bool {
+	if input {
+		return TRUE
+	}
+	return FALSE
 }

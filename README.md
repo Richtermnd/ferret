@@ -14,6 +14,9 @@ Main idea - create a easy language for doing math, with scalars/vectors/matrix s
 7. ?
 
 
+### Controversial moment
+- Bool as integers (example: 5 + (1 > 0) == 6)
+
 ### TODO:
  - [x] Scientific notation
  - [ ] Different bases for numbers

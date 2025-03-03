@@ -16,8 +16,8 @@ type (
 )
 
 type Parser struct {
-	l         *lexer.Lexer
 	curToken  token.Token
+	l         *lexer.Lexer
 	peekToken token.Token
 
 	prefixParseFns map[token.TokenType]prefixParseFn
@@ -32,17 +32,33 @@ func New(l *lexer.Lexer) *Parser {
 		prefixParseFns: make(map[token.TokenType]prefixParseFn),
 		infixParseFns:  make(map[token.TokenType]infixParseFn),
 	}
+
+	// --- prefix ---
+	p.prefixParseFns[token.NOT] = p.parsePrefixExpression
+	p.prefixParseFns[token.SUB] = p.parsePrefixExpression
+
 	p.prefixParseFns[token.IDENT] = p.parseIdentifier
 	p.prefixParseFns[token.INT] = p.parseIntegerLiteral
 	p.prefixParseFns[token.FLOAT] = p.parseFloatLiteral
-	p.prefixParseFns[token.SUB] = p.parsePrefixExpression
+	p.prefixParseFns[token.TRUE] = p.parseBooleanLiteral
+	p.prefixParseFns[token.FALSE] = p.parseBooleanLiteral
+
 	p.prefixParseFns[token.LPAREN] = p.parseGroupedExpression
 
+	// --- infix ---
 	p.infixParseFns[token.ADD] = p.parseInfixExpression
 	p.infixParseFns[token.SUB] = p.parseInfixExpression
 	p.infixParseFns[token.MUL] = p.parseInfixExpression
 	p.infixParseFns[token.DIV] = p.parseInfixExpression
 	p.infixParseFns[token.REM] = p.parseInfixExpression
+	p.infixParseFns[token.REM] = p.parseInfixExpression
+
+	p.infixParseFns[token.EQ] = p.parseInfixExpression
+	p.infixParseFns[token.NEQ] = p.parseInfixExpression
+	p.infixParseFns[token.GT] = p.parseInfixExpression
+	p.infixParseFns[token.GEQ] = p.parseInfixExpression
+	p.infixParseFns[token.LT] = p.parseInfixExpression
+	p.infixParseFns[token.LEQ] = p.parseInfixExpression
 	p.nextToken()
 	p.nextToken()
 	return p
@@ -147,6 +163,10 @@ func (p *Parser) parseFloatLiteral() ast.Expression {
 	}
 	lit.Value = value
 	return lit
+}
+
+func (p *Parser) parseBooleanLiteral() ast.Expression {
+	return &ast.BooleanLiteral{Token: p.curToken, Value: p.curToken.Is(token.TRUE)}
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {

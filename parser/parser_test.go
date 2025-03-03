@@ -80,20 +80,22 @@ func TestPrefixExpressions(t *testing.T) {
 		desc     string
 		source   string
 		operator string
-		value    int64
+		output   string
 	}{
-		// For future
-		// {
-		// 	desc:     "not",
-		// 	source:   "!5",
-		// 	operator: "!",
-		// 	value:    5,
-		// },
 		{
-			desc:     "unary minus",
-			source:   "-5",
-			operator: "-",
-			value:    5,
+			desc:   "not",
+			source: "!true",
+			output: "(!true)",
+		},
+		{
+			desc:   "unary minus",
+			source: "-5",
+			output: "(-5)",
+		},
+		{
+			desc:   "not not",
+			source: "!!true",
+			output: "(!(!true))",
 		},
 	}
 	for _, tt := range testCases {
@@ -115,10 +117,9 @@ func TestPrefixExpressions(t *testing.T) {
 			if !ok {
 				t.Fatalf("stmt exp not a ast.PrefixExpression: %T\n", stmt.Expr)
 			}
-			if exp.Operator != tt.operator {
-				t.Errorf("mismatch operator expected: %s got: %s\n", tt.operator, exp.Operator)
+			if exp.String() != tt.output {
+				t.Errorf("expected: %s got: %s\n", tt.output, exp.String())
 			}
-			testIntegerLiteral(t, exp.Right, tt.value)
 		})
 	}
 }
@@ -164,6 +165,48 @@ func TestInfixExpressions(t *testing.T) {
 			source:   "1 % 1",
 			left:     1,
 			operator: "%",
+			right:    1,
+		},
+		{
+			desc:     "eq",
+			source:   "1 == 1",
+			left:     1,
+			operator: "==",
+			right:    1,
+		},
+		{
+			desc:     "neq",
+			source:   "1 != 1",
+			left:     1,
+			operator: "!=",
+			right:    1,
+		},
+		{
+			desc:     "gt",
+			source:   "1 > 1",
+			left:     1,
+			operator: ">",
+			right:    1,
+		},
+		{
+			desc:     "geq",
+			source:   "1 >= 1",
+			left:     1,
+			operator: ">=",
+			right:    1,
+		},
+		{
+			desc:     "lt",
+			source:   "1 < 1",
+			left:     1,
+			operator: "<",
+			right:    1,
+		},
+		{
+			desc:     "leq",
+			source:   "1 <= 1",
+			left:     1,
+			operator: "<=",
 			right:    1,
 		},
 	}
