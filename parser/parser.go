@@ -59,6 +59,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFns[token.GEQ] = p.parseInfixExpression
 	p.infixParseFns[token.LT] = p.parseInfixExpression
 	p.infixParseFns[token.LEQ] = p.parseInfixExpression
+	p.infixParseFns[token.OR] = p.parseInfixExpression
+	p.infixParseFns[token.AND] = p.parseInfixExpression
 	p.nextToken()
 	p.nextToken()
 	return p

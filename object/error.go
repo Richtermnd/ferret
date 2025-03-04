@@ -11,6 +11,7 @@ const (
 	UNKNOWN_OPERATOR_ERR = "unknown operator"
 	NOT_IMPLEMENTED_ERR  = "not implemented"
 	NOT_FOUND_ERR        = "not found"
+	UNEXPECTED           = "unexpected"
 )
 
 type Error struct {

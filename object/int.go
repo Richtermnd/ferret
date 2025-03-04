@@ -108,3 +108,7 @@ func (o *Integer) Equal(right Object) Object {
 		return NewError(UNSUPPORTED_ERR, "%s and %s not comparable", o.Type(), r.Type())
 	}
 }
+
+func (o *Integer) AsBool() Bool {
+	return Bool{Value: o.Value != 0}
+}

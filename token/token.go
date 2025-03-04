@@ -148,6 +148,7 @@ func (t Token) String() string {
 }
 
 // TODO: use smaller numbers for precedence
+// https://en.cppreference.com/w/c/language/operator_precedence
 const (
 	LOWEST  = 0
 	UNARY   = 90
@@ -156,12 +157,18 @@ const (
 
 func (t Token) Precedence() int {
 	switch t.Type {
-	case EQ, NEQ, GT, GEQ, LT, LEQ:
-		return 10
+	case OR:
+		return 1
+	case AND:
+		return 2
+	case EQ, NEQ:
+		return 3
+	case GT, GEQ, LT, LEQ:
+		return 4
 	case ADD, SUB:
-		return 20
+		return 5
 	case MUL, DIV, REM:
-		return 30
+		return 6
 	case NOT:
 		return UNARY
 	default:

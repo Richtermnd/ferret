@@ -54,7 +54,9 @@ func (pe *InfixExpression) String() string {
 	var out strings.Builder
 	out.WriteString("(")
 	out.WriteString(pe.Left.String())
+	out.WriteString(" ")
 	out.WriteString(pe.Operator)
+	out.WriteString(" ")
 	out.WriteString(pe.Right.String())
 	out.WriteString(")")
 	return out.String()

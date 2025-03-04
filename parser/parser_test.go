@@ -248,27 +248,27 @@ func TestParenthesisExpressions(t *testing.T) {
 		{
 			desc:   "no parenthesis",
 			input:  "1 + 2 * 3",
-			output: "(1+(2*3))",
+			output: "(1 + (2 * 3))",
 		},
 		{
 			desc:   "no matter parenthesis",
 			input:  "1 + (2 * 3)",
-			output: "(1+(2*3))",
+			output: "(1 + (2 * 3))",
 		},
 		{
 			desc:   "simple parenthesis",
 			input:  "(1 + 2) * 3",
-			output: "((1+2)*3)",
+			output: "((1 + 2) * 3)",
 		},
 		{
 			desc:   "few parenthesis",
 			input:  "(1 + 2) * (3 + 4)",
-			output: "((1+2)*(3+4))",
+			output: "((1 + 2) * (3 + 4))",
 		},
 		{
 			desc:   "nested parenthesis",
 			input:  "(1 - (2 + 3)) * 4",
-			output: "((1-(2+3))*4)",
+			output: "((1 - (2 + 3)) * 4)",
 		},
 		{
 			desc:    "unclosed parenthesis",
@@ -311,7 +311,7 @@ func TestLetStatements(t *testing.T) {
 			desc:       "complex assignment",
 			input:      "let a = -5 * (1 + 2)",
 			identifier: "a",
-			value:      "((-5)*(1+2))",
+			value:      "((-5) * (1 + 2))",
 		},
 		{
 			desc:    "missed let",

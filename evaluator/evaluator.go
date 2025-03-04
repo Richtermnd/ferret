@@ -3,6 +3,7 @@ package evaluator
 import (
 	"github.com/Richtermnd/ferret/ast"
 	"github.com/Richtermnd/ferret/object"
+	"github.com/Richtermnd/ferret/token"
 )
 
 var (
@@ -44,7 +45,7 @@ func Eval(env *object.Environment, node ast.Node) object.Object {
 	case *ast.InfixExpression:
 		left := Eval(env, node.Left)
 		right := Eval(env, node.Right)
-		return evalInfixExpression(node.Operator, left, right)
+		return evalInfixExpression(node.Token, left, right)
 	}
 
 	return nil
@@ -86,15 +87,19 @@ func evalMinusPrefixOperator(right object.Object) object.Object {
 	return object.NewError(object.UNSUPPORTED_ERR, "-%s", right.Type())
 }
 
-func evalInfixExpression(op string, left, right object.Object) object.Object {
-	switch op {
-	case "+":
+// TODO: split this func in smaller pieces
+func evalInfixExpression(tok token.Token, left, right object.Object) object.Object {
+	if tok.Type == token.AND || tok.Type == token.OR {
+		return evalLogicExpression(tok, left, right)
+	}
+	switch tok.Type {
+	case token.ADD:
 		return add(left, right)
-	case "-":
+	case token.SUB:
 		return sub(left, right)
-	case "*":
+	case token.MUL:
 		return mul(left, right)
-	case "/":
+	case token.DIV:
 		return div(left, right)
 	}
 
@@ -102,22 +107,50 @@ func evalInfixExpression(op string, left, right object.Object) object.Object {
 	rightCmp, rok := right.(object.Compared)
 	if lok && rok {
 		// comparing
-		switch op {
-		case "==":
+		switch tok.Type {
+		case token.EQ:
 			return eq(leftCmp, rightCmp)
-		case "!=":
+		case token.NEQ:
 			return neq(leftCmp, rightCmp)
-		case ">":
-			return gt(leftCmp, rightCmp)
-		case ">=":
-			return geq(leftCmp, rightCmp)
-		case "<":
+		case token.LT:
 			return lt(leftCmp, rightCmp)
-		case "<=":
+		case token.LEQ:
 			return leq(leftCmp, rightCmp)
+		case token.GT:
+			return gt(leftCmp, rightCmp)
+		case token.GEQ:
+			return geq(leftCmp, rightCmp)
 		}
 	}
-	return object.NewError(object.UNKNOWN_OPERATOR_ERR, "%s %s %s", left.Type(), op, right.Type())
+	return object.NewError(object.UNKNOWN_OPERATOR_ERR, "%s %s %s", left.Type(), tok.String(), right.Type())
+}
+
+func evalLogicExpression(tok token.Token, left, right object.Object) object.Object {
+	var a, b bool
+
+	if lbool, ok := left.(*object.Bool); ok {
+		a = lbool.Value
+	} else if lbooler, ok := left.(object.Booler); ok {
+		a = lbooler.AsBool().Value
+	} else {
+		return object.NewError(object.UNEXPECTED, "expected: bool or booler got: %s", left.Type())
+	}
+
+	if rbool, ok := right.(*object.Bool); ok {
+		b = rbool.Value
+	} else if rbooler, ok := right.(object.Booler); ok {
+		b = rbooler.AsBool().Value
+	} else {
+		return object.NewError(object.UNEXPECTED, "expected: bool or booler got: %s", right.Type())
+	}
+
+	switch tok.Type {
+	case token.AND:
+		return boolFromNative(a && b)
+	case token.OR:
+		return boolFromNative(a || b)
+	}
+	return object.NewError(object.UNEXPECTED, "unexpected operator (probably a bug): %s", tok.Literal)
 }
 
 func add(left, right object.Object) object.Object {

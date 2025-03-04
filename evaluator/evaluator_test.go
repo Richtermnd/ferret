@@ -128,6 +128,10 @@ func TestEvalBoolExpression(t *testing.T) {
     false true != true 
     false false != false
     true true != false
+    true true or true
+    true true and true
+    false false and true
+    true false or true
 
     true 1 == 1
     false 1 != 1
@@ -164,28 +168,29 @@ func TestEvalBoolExpression(t *testing.T) {
     false 1.0 < false
     false 1.0 <= false`
 	for _, line := range strings.Split(source, "\n") {
-		if line == "" {
-			continue
-		}
-		line := strings.TrimSpace(line)
-		t.Log("line:", line)
-		expectedLine, expr, _ := strings.Cut(line, " ")
-		t.Log("expectedLine:", expectedLine)
-		t.Log("expr:", expr)
+		t.Run(line, func(t *testing.T) {
+			if line == "" {
+				return
+			}
+			line := strings.TrimSpace(line)
+			expectedLine, expr, _ := strings.Cut(line, " ")
+			t.Log("expectedLine:", expectedLine)
+			t.Log("expr:", expr)
 
-		expected := testEval(t, expectedLine)
-		res := testEval(t, expr)
-		expBool, ok := expected.(*object.Bool)
-		if !ok {
-			t.Fatalf("[ERROR] wrong expected type: %T inspect: %s", expected, expected.Inspect())
-		}
-		resBool, ok := res.(*object.Bool)
-		if !ok {
-			t.Fatalf("[ERROR] wrong expr type: %T inspect: %s", res, res.Inspect())
-		}
-		if expBool.Value != resBool.Value {
-			t.Errorf("[ERROR] wrong comprassion: '%s' expected: %t got %t\n", expr, expBool.Value, resBool.Value)
-		}
+			expected := testEval(t, expectedLine)
+			res := testEval(t, expr)
+			expBool, ok := expected.(*object.Bool)
+			if !ok {
+				t.Fatalf("wrong expected type: %T inspect: %s", expected, expected.Inspect())
+			}
+			resBool, ok := res.(*object.Bool)
+			if !ok {
+				t.Fatalf("wrong expr type: %T inspect: %s", res, res.Inspect())
+			}
+			if expBool.Value != resBool.Value {
+				t.Errorf("wrong comprassion: '%s' expected: %t got %t\n", expr, expBool.Value, resBool.Value)
+			}
+		})
 	}
 }
 
