@@ -84,6 +84,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.LBRACE:
+		return p.parseBlockStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -109,6 +111,19 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	p.nextToken()
 	stmt.Value = p.parseExpression(token.LOWEST)
 	return stmt
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{
+		Token: p.curToken,
+	}
+	p.nextToken()
+	for !p.curToken.Is(token.RBRACE) {
+		stmt := p.parseStatement()
+		block.Statements = append(block.Statements, stmt)
+		p.nextToken()
+	}
+	return block
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

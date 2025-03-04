@@ -375,3 +375,27 @@ func testLetStatement(t *testing.T, s ast.Statement, name, value string) bool {
 	}
 	return true
 }
+
+func TestBlockStatement(t *testing.T) {
+	source := `{
+    let a = 5
+    let b = 3
+    a + b
+    }`
+	expected := "{ let a = 5; let b = 3; (a + b); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	block, ok := stmt.(*ast.BlockStatement)
+	if !ok {
+		t.Fatalf("statement isn't a block: %T", stmt)
+	}
+	stringRepr := block.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}

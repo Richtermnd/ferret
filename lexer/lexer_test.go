@@ -125,13 +125,15 @@ func TestExpression(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
-	source := "let true false and or"
+	source := "let true false and or if else"
 	expected := []token.Token{
 		{Type: token.LET, Literal: "let"},
 		{Type: token.TRUE, Literal: "true"},
 		{Type: token.FALSE, Literal: "false"},
 		{Type: token.AND, Literal: "and"},
 		{Type: token.OR, Literal: "or"},
+		{Type: token.IF, Literal: "if"},
+		{Type: token.ELSE, Literal: "else"},
 	}
 	l := lexer.New(source)
 	for i, expectedToken := range expected {

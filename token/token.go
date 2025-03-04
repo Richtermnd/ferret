@@ -48,6 +48,8 @@ const (
 	REM       // %
 	LPAREN    // (
 	RPAREN    // )
+	LBRACE    // {
+	RBRACE    // }
 	SEMICOLON // ;
 	ASSIGN    // =
 	EQ        // ==
@@ -61,6 +63,8 @@ const (
 
 	keywords_begin
 	LET   // let
+	IF    // if
+	ELSE  // else
 	TRUE  // true
 	FALSE // false
 	AND   // and
@@ -85,6 +89,8 @@ var tokens = [...]string{
 	REM:       "%",
 	LPAREN:    "(",
 	RPAREN:    ")",
+	LBRACE:    "{",
+	RBRACE:    "}",
 	SEMICOLON: ";",
 	ASSIGN:    "=",
 	EQ:        "==",
@@ -96,6 +102,8 @@ var tokens = [...]string{
 	LEQ:       "<=",
 
 	LET:   "let",
+	IF:    "if",
+	ELSE:  "else",
 	TRUE:  "true",
 	FALSE: "false",
 	AND:   "and",
@@ -107,6 +115,8 @@ var tokens = [...]string{
 
 var keywords = map[string]TokenType{
 	"let":   LET,
+	"if":    IF,
+	"else":  ELSE,
 	"true":  TRUE,
 	"false": FALSE,
 	"and":   AND,

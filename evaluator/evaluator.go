@@ -19,6 +19,9 @@ func Eval(env *object.Environment, node ast.Node) object.Object {
 	case *ast.Identifier:
 		return evalIdentifier(env, node)
 
+	case *ast.BlockStatement:
+		return evalStatements(env.SubEnv(), node.Statements)
+
 	case *ast.LetStatement:
 		value := Eval(env, node.Value)
 		if object.IsError(value) {

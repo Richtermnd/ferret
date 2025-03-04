@@ -50,6 +50,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LPAREN, "(")
 	case ')':
 		tok = newToken(token.RPAREN, ")")
+	case '{':
+		tok = newToken(token.LBRACE, "(")
+	case '}':
+		tok = newToken(token.RBRACE, ")")
 	case '=':
 		tok = l.switchSuffix(token.ASSIGN, token.EQ, '=')
 	case '!':
