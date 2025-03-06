@@ -11,18 +11,16 @@ type Identifier struct {
 	Value string
 }
 
-func (i *Identifier) Literal() string { return i.Token.Literal }
-func (i *Identifier) String() string  { return i.Value }
-func (i *Identifier) exprNode()       {}
+func (i *Identifier) exprNode()      {}
+func (i *Identifier) String() string { return i.Value }
 
 type ExpressionStatement struct {
 	Token token.Token
 	Expr  Expression
 }
 
-func (s *ExpressionStatement) Literal() string { return s.Token.Literal }
-func (s *ExpressionStatement) String() string  { return s.Expr.String() }
-func (s *ExpressionStatement) stmtNode()       {}
+func (s *ExpressionStatement) String() string { return s.Expr.String() }
+func (s *ExpressionStatement) stmtNode()      {}
 
 type PrefixExpression struct {
 	Token    token.Token
@@ -30,8 +28,7 @@ type PrefixExpression struct {
 	Right    Expression
 }
 
-func (pe *PrefixExpression) exprNode()       {}
-func (pe *PrefixExpression) Literal() string { return pe.Token.Literal }
+func (pe *PrefixExpression) exprNode() {}
 func (pe *PrefixExpression) String() string {
 	var out strings.Builder
 	out.WriteString("(")
@@ -48,8 +45,7 @@ type InfixExpression struct {
 	Right    Expression
 }
 
-func (pe *InfixExpression) exprNode()       {}
-func (pe *InfixExpression) Literal() string { return pe.Token.Literal }
+func (pe *InfixExpression) exprNode() {}
 func (pe *InfixExpression) String() string {
 	var out strings.Builder
 	out.WriteString("(")

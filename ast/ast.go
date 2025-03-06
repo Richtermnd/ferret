@@ -5,7 +5,6 @@ import (
 )
 
 type Node interface {
-	Literal() string
 	String() string
 }
 
@@ -21,14 +20,6 @@ type Expression interface {
 
 type Program struct {
 	Statements []Statement
-}
-
-func (p *Program) Literal() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].Literal()
-	} else {
-		return ""
-	}
 }
 
 func (p *Program) String() string {

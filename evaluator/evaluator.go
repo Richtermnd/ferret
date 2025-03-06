@@ -29,6 +29,9 @@ func Eval(env *object.Environment, node ast.Node) object.Object {
 		}
 		env.Set(node.Name.Value, value)
 
+	case *ast.IfStatement:
+		return evalIfStmt(env, node)
+
 	case *ast.ExpressionStatement:
 		return Eval(env, node.Expr)
 
@@ -68,6 +71,24 @@ func evalIdentifier(env *object.Environment, node *ast.Identifier) object.Object
 		return object.NewError(object.NOT_FOUND_ERR, "%s", node.Value)
 	}
 	return obj
+}
+
+func evalIfStmt(env *object.Environment, node *ast.IfStatement) object.Object {
+	cond := Eval(env, node.Condition)
+	var boolCond bool
+	if cond.Type() == object.BOOL_OBJ {
+		boolCond = cond.(*object.Bool).Value
+	} else if ifcond, ok := cond.(object.Booler); ok {
+		boolCond = ifcond.AsBool().Value
+	} else {
+		return object.NewError(object.UNEXPECTED, "expected bool or booler, got: %T", ifcond)
+	}
+	if boolCond {
+		return Eval(env.SubEnv(), node.Consequence)
+	} else if node.Alternative != nil {
+		return Eval(env.SubEnv(), node.Alternative)
+	}
+	return nil
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {

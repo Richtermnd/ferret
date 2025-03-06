@@ -219,6 +219,27 @@ func TestLetStatement(t *testing.T) {
 	}
 }
 
+func TestIfStatement(t *testing.T) {
+	const source = `if true { 2 + 3 }`
+	const expected = 5
+	res := testEval(t, source)
+	testIntegerObject(t, res, expected)
+}
+
+func TestIfElseStatement(t *testing.T) {
+	const source = `if false { 2 + 3 } else { 0 }`
+	const expected = 0
+	res := testEval(t, source)
+	testIntegerObject(t, res, expected)
+}
+
+func TestIfElseIfStatement(t *testing.T) {
+	const source = `if false { 1 } else if 0 != 0 { 2 } else { 3 }`
+	const expected = 3
+	res := testEval(t, source)
+	testIntegerObject(t, res, expected)
+}
+
 func checkParserErrors(t *testing.T, p *parser.Parser) {
 	errs := p.Errors()
 	if !p.HasErrors() {

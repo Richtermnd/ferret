@@ -353,10 +353,6 @@ func TestLetStatements(t *testing.T) {
 }
 
 func testLetStatement(t *testing.T, s ast.Statement, name, value string) bool {
-	if s.Literal() != "let" {
-		t.Errorf("mismatch literals expected let got: %s", s.Literal())
-		return false
-	}
 	letStmt, ok := s.(*ast.LetStatement)
 	if !ok {
 		t.Errorf("mismatch statement type expected: *ast.LetStatement got: %T\n", s)
@@ -366,8 +362,8 @@ func testLetStatement(t *testing.T, s ast.Statement, name, value string) bool {
 		t.Errorf("mismatch identifier value expected: %s got: %s\n", name, letStmt.Name.Value)
 		return false
 	}
-	if letStmt.Name.Literal() != name {
-		t.Errorf("mismatch identifier literal expected: %s got: %s\n", name, letStmt.Name.Literal())
+	if letStmt.Name.String() != name {
+		t.Errorf("mismatch identifier literal expected: %s got: %s\n", name, letStmt.Name.String())
 		return false
 	}
 	if letStmt.Value.String() != value {
@@ -377,7 +373,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name, value string) bool {
 }
 
 func TestBlockStatement(t *testing.T) {
-	source := `{
+	const source = `{
     let a = 5
     let b = 3
     a + b
@@ -387,6 +383,7 @@ func TestBlockStatement(t *testing.T) {
 	program := p.Parse()
 	checkParserErrors(t, p)
 	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
 		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
 	}
 	stmt := program.Statements[0]
@@ -395,6 +392,81 @@ func TestBlockStatement(t *testing.T) {
 		t.Fatalf("statement isn't a block: %T", stmt)
 	}
 	stringRepr := block.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestIfStatement(t *testing.T) {
+	const source = `if foo {
+        2 + 3
+    }`
+	const expected = "if foo { (2 + 3); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	ifstmt, ok := stmt.(*ast.IfStatement)
+	if !ok {
+		t.Fatalf("statement isn't a if statement: %T", stmt)
+	}
+	stringRepr := ifstmt.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestIfElseStatement(t *testing.T) {
+	const source = `if 1 + 1 {
+        1 + 1
+    } else {
+        1 - 1
+    }`
+	const expected = "if (1 + 1) { (1 + 1); } else { (1 - 1); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	ifstmt, ok := stmt.(*ast.IfStatement)
+	if !ok {
+		t.Fatalf("statement isn't a if statement: %T", stmt)
+	}
+	stringRepr := ifstmt.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestIfElseIfStatement(t *testing.T) {
+	const source = `if 1 + 1 {
+        1 + 1
+    } else if 0 == 0 {
+        1 - 1
+    } else {
+        1 / 1
+    }`
+	const expected = "if (1 + 1) { (1 + 1); } else if (0 == 0) { (1 - 1); } else { (1 / 1); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	ifstmt, ok := stmt.(*ast.IfStatement)
+	if !ok {
+		t.Fatalf("statement isn't a if statement: %T", stmt)
+	}
+	stringRepr := ifstmt.String()
 	if stringRepr != expected {
 		t.Errorf("expected: %s got: %s", expected, stringRepr)
 	}

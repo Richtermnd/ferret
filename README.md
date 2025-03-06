@@ -23,7 +23,7 @@ Main idea - create a easy language for doing math, with scalars/vectors/matrix s
  - [x] Check invalid numbers (like 12a3)
  - [ ] Program that goes through all the files and save all todo comments in TODO.md
  - [ ] Compile it in wasm to create interactive web version
-
+ - [ ] Pretty parser errors and runtime error tracing
 
 
 ### Implementation Q&A

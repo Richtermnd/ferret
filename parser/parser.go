@@ -86,6 +86,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseLetStatement()
 	case token.LBRACE:
 		return p.parseBlockStatement()
+	case token.IF:
+		return p.parseIfStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -124,6 +126,32 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 		p.nextToken()
 	}
 	return block
+}
+
+func (p *Parser) parseIfStatement() *ast.IfStatement {
+	ifstmt := &ast.IfStatement{Token: p.curToken}
+	p.nextToken()
+	ifstmt.Condition = p.parseExpression(token.LOWEST)
+	p.nextToken()
+	ifstmt.Consequence = p.parseBlockStatement()
+	if !p.peekToken.Is(token.ELSE) {
+		return ifstmt
+	}
+	p.nextToken()
+
+	if p.peekToken.Is(token.LBRACE) {
+		p.nextToken()
+		ifstmt.Alternative = p.parseBlockStatement()
+	} else if p.peekToken.Is(token.IF) {
+		p.nextToken()
+		ifstmt.Alternative = p.parseIfStatement()
+	} else {
+		p.errors = append(p.errors, fmt.Errorf("expected block or if"))
+		return nil
+	}
+	p.nextToken()
+
+	return ifstmt
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
