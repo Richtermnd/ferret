@@ -12,6 +12,7 @@ type Identifier struct {
 }
 
 func (i *Identifier) exprNode()      {}
+func (i *Identifier) stmtNode()      {}
 func (i *Identifier) String() string { return i.Value }
 
 type ExpressionStatement struct {
@@ -56,4 +57,19 @@ func (pe *InfixExpression) String() string {
 	out.WriteString(pe.Right.String())
 	out.WriteString(")")
 	return out.String()
+}
+
+type CallExpression struct {
+	Token    token.Token
+	Function Expression
+	Args     []Expression
+}
+
+func (ce *CallExpression) exprNode() {}
+func (ce *CallExpression) String() string {
+	args := make([]string, len(ce.Args))
+	for i, arg := range ce.Args {
+		args[i] = arg.String()
+	}
+	return ce.Function.String() + "(" + strings.Join(args, ", ") + ")"
 }

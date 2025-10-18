@@ -14,6 +14,7 @@ func checkParserErrors(t *testing.T, p *parser.Parser) {
 	if !p.HasErrors() {
 		return
 	}
+	t.Log("parser errors")
 	for _, err := range errs {
 		t.Error(err)
 	}
@@ -469,5 +470,105 @@ func TestIfElseIfStatement(t *testing.T) {
 	stringRepr := ifstmt.String()
 	if stringRepr != expected {
 		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestReturnStatement(t *testing.T) {
+	testCases := []struct {
+		desc     string
+		source   string
+		expected string
+	}{
+		{
+			desc:     "return identifier",
+			source:   "return foo",
+			expected: "foo",
+		},
+		{
+			desc:     "return expression",
+			source:   "return a + b",
+			expected: "(a + b)",
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.desc, func(t *testing.T) {
+			p := parser.New(lexer.New(tt.source))
+			program := p.Parse()
+			checkParserErrors(t, p)
+			if len(program.Statements) != 1 {
+				t.Log(program.Statements)
+				t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+			}
+			stmt := program.Statements[0]
+			retstmt, ok := stmt.(*ast.ReturnStatement)
+			if !ok {
+				t.Fatalf("statement isn't a return statement: %T", stmt)
+			}
+			stringRepr := retstmt.Value.String()
+			if stringRepr != tt.expected {
+				t.Errorf("expected: %s got: %s", tt.expected, stringRepr)
+			}
+		})
+	}
+}
+
+func TestFuncStatement(t *testing.T) {
+	const source = "func add(a, b) { return a + b }"
+	const expected = "func add(a, b) { return (a + b); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	funcStmt, ok := stmt.(*ast.FuncStatement)
+	if !ok {
+		t.Fatalf("statement isn't a func statement: %T", stmt)
+	}
+	stringRepr := funcStmt.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestAnonymousFuncStatement(t *testing.T) {
+	const source = "func (a, b) { return a + b }"
+	const expected = "func (a, b) { return (a + b); }"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt := program.Statements[0]
+	funcStmt, ok := stmt.(*ast.FuncStatement)
+	if !ok {
+		t.Fatalf("statement isn't a func statement: %T", stmt)
+	}
+	stringRepr := funcStmt.String()
+	if stringRepr != expected {
+		t.Errorf("expected: %s got: %s", expected, stringRepr)
+	}
+}
+
+func TestCallExpr(t *testing.T) {
+	const source = "foo(1 + a, bar(b))"
+	const expected = "foo((1 + a), bar(b))"
+	p := parser.New(lexer.New(source))
+	program := p.Parse()
+	checkParserErrors(t, p)
+	if len(program.Statements) != 1 {
+		t.Log(program.Statements)
+		t.Fatalf("Expected num of statements %d got %d\n", 1, len(program.Statements))
+	}
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("bad stmt")
+	}
+	if stmt.Expr.String() != expected {
+		t.Fail()
 	}
 }

@@ -56,3 +56,31 @@ func (is *IfStatement) String() string {
 }
 
 func (is *IfStatement) stmtNode() {}
+
+type ReturnStatement struct {
+	Token token.Token
+	Value Expression
+}
+
+func (rs *ReturnStatement) String() string { return "return " + rs.Value.String() }
+func (rs *ReturnStatement) stmtNode()      {}
+
+type FuncStatement struct {
+	Token token.Token
+	Name  *Identifier // can be nil for anonymous functions
+	Args  []*Identifier
+	Body  *BlockStatement
+}
+
+func (fs *FuncStatement) String() string {
+	var name string
+	if fs.Name != nil {
+		name = fs.Name.Value
+	}
+	args := make([]string, len(fs.Args))
+	for i, arg := range fs.Args {
+		args[i] = arg.String()
+	}
+	return fmt.Sprintf("func %s(%s) %s", name, strings.Join(args, ", "), fs.Body.String())
+}
+func (fs *FuncStatement) stmtNode() {}

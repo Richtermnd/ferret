@@ -51,6 +51,7 @@ const (
 	LBRACE    // {
 	RBRACE    // }
 	SEMICOLON // ;
+	COMMA     // ,
 	ASSIGN    // =
 	EQ        // ==
 	NOT       // !
@@ -62,13 +63,15 @@ const (
 	operators_end
 
 	keywords_begin
-	LET   // let
-	IF    // if
-	ELSE  // else
-	TRUE  // true
-	FALSE // false
-	AND   // and
-	OR    // or
+	LET    // let
+	IF     // if
+	ELSE   // else
+	FUNC   // func
+	RETURN // return
+	TRUE   // true
+	FALSE  // false
+	AND    // and
+	OR     // or
 	keywords_end
 )
 
@@ -92,6 +95,7 @@ var tokens = [...]string{
 	LBRACE:    "{",
 	RBRACE:    "}",
 	SEMICOLON: ";",
+	COMMA:     ",",
 	ASSIGN:    "=",
 	EQ:        "==",
 	NOT:       "!",
@@ -101,26 +105,30 @@ var tokens = [...]string{
 	LT:        "<",
 	LEQ:       "<=",
 
-	LET:   "let",
-	IF:    "if",
-	ELSE:  "else",
-	TRUE:  "true",
-	FALSE: "false",
-	AND:   "and",
-	OR:    "or",
+	LET:    "let",
+	IF:     "if",
+	ELSE:   "else",
+	FUNC:   "func",
+	RETURN: "return",
+	TRUE:   "true",
+	FALSE:  "false",
+	AND:    "and",
+	OR:     "or",
 }
 
 // vim replace command for <TokenType> // <litetal> -> "<literal>": <TokenType>
 // s/\(\w\+\)\s\+\/\/\s\+\(.\+\)/"\2": \1,
 
 var keywords = map[string]TokenType{
-	"let":   LET,
-	"if":    IF,
-	"else":  ELSE,
-	"true":  TRUE,
-	"false": FALSE,
-	"and":   AND,
-	"or":    OR,
+	"let":    LET,
+	"if":     IF,
+	"else":   ELSE,
+	"func":   FUNC,
+	"return": RETURN,
+	"true":   TRUE,
+	"false":  FALSE,
+	"and":    AND,
+	"or":     OR,
 }
 
 // LookupKeyword lookup in keywords table

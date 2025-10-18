@@ -79,8 +79,6 @@ func (p *Parser) Parse() *ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	// Here will be other tokens like var, functions declarations assignment and other
-	// Everything other - expressions
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
@@ -88,6 +86,10 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parseBlockStatement()
 	case token.IF:
 		return p.parseIfStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
+	case token.FUNC:
+		return p.parseFuncStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -152,6 +154,55 @@ func (p *Parser) parseIfStatement() *ast.IfStatement {
 	p.nextToken()
 
 	return ifstmt
+}
+
+func (p *Parser) parseFuncStatement() *ast.FuncStatement {
+	stmt := &ast.FuncStatement{
+		Token: p.curToken,
+	}
+	if p.peekToken.Is(token.IDENT) {
+		p.nextToken()
+		ident := p.parseIdentifier()
+		stmt.Name = ident.(*ast.Identifier)
+	}
+
+	if p.curToken.Is(token.LPAREN) {
+		p.errors = append(p.errors, fmt.Errorf("parseFunc: expected '(' got %s", p.peekToken.Literal))
+		return nil
+	}
+	p.nextToken()
+	stmt.Args = p.parseArgs()
+	p.nextToken()
+	stmt.Body = p.parseBlockStatement()
+	return stmt
+}
+
+func (p *Parser) parseArgs() []*ast.Identifier {
+	// piece of shit
+	args := make([]*ast.Identifier, 0)
+	for {
+		p.nextToken()
+		args = append(args, p.parseIdentifier().(*ast.Identifier))
+		if p.peekToken.Is(token.RPAREN) {
+			p.nextToken()
+			break
+		}
+		if p.peekToken.Is(token.COMMA) {
+			p.nextToken()
+		} else {
+			p.errors = append(p.errors, fmt.Errorf("expected ',', got %s", p.curToken.String()))
+		}
+	}
+	return args
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{
+		Token: p.curToken,
+	}
+	p.nextToken()
+	stmt.Value = p.parseExpression(token.LOWEST)
+	return stmt
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

@@ -96,7 +96,7 @@ func TestNumbersRecognizing(t *testing.T) {
 }
 
 func TestExpression(t *testing.T) {
-	source := "-1 + (10 - a) * 3.5 / foo1_b !true false"
+	source := "-1 + (10 - a ) * 3.5 / foo1_b !true false"
 	expected := []token.Token{
 		{Type: token.SUB, Literal: "-"},
 		{Type: token.INT, Literal: "1"},
@@ -125,7 +125,7 @@ func TestExpression(t *testing.T) {
 }
 
 func TestKeywords(t *testing.T) {
-	source := "let true false and or if else"
+	source := "let true false and or if else func return"
 	expected := []token.Token{
 		{Type: token.LET, Literal: "let"},
 		{Type: token.TRUE, Literal: "true"},
@@ -134,8 +134,11 @@ func TestKeywords(t *testing.T) {
 		{Type: token.OR, Literal: "or"},
 		{Type: token.IF, Literal: "if"},
 		{Type: token.ELSE, Literal: "else"},
+		{Type: token.FUNC, Literal: "func"},
+		{Type: token.RETURN, Literal: "return"},
 	}
 	l := lexer.New(source)
+
 	for i, expectedToken := range expected {
 		tok := l.NextToken()
 		t.Logf("%s\n", tok.Literal)
